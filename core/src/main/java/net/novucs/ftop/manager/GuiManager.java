@@ -1,7 +1,7 @@
 package net.novucs.ftop.manager;
 
 import net.novucs.ftop.FactionsTopPlugin;
-import net.novucs.ftop.entity.FactionWorth;
+import net.novucs.ftop.entity.Worth;
 import net.novucs.ftop.gui.GuiContext;
 import net.novucs.ftop.util.SplaySet;
 import net.novucs.ftop.util.StringUtils;
@@ -36,10 +36,12 @@ public class GuiManager {
         }
     }
 
-    public void sendGui(Player player, int page) {
-        int entries = plugin.getSettings().getGuiLayout().getFactionsPerPage();
-        SplaySet<FactionWorth> factions = plugin.getWorthManager().getOrderedFactions();
-        int maxPage = Math.max((int) Math.ceil((double) factions.size() / entries), 1);
+    public void sendGui(Player player, boolean showAlliances, int page) {
+        int entries = plugin.getSettings().getGuiLayout().getEntriesPerPage();
+        SplaySet<Worth> worthSet = showAlliances
+                ? plugin.getWorthManager().getOrderedAlliances()
+                : plugin.getWorthManager().getOrderedFactions();
+        int maxPage = Math.max((int) Math.ceil((double) worthSet.size() / entries), 1);
         page = Math.max(1, Math.min(maxPage, page));
 
         Map<String, String> placeholders = new HashMap<>();
@@ -47,9 +49,12 @@ public class GuiManager {
         placeholders.put("{page:this}", String.valueOf(page));
         placeholders.put("{page:next}", String.valueOf(page + 1));
         placeholders.put("{page:last}", String.valueOf(maxPage));
+        placeholders.put("{type}", showAlliances
+                ? plugin.getSettings().getAllianceTypeName()
+                : plugin.getSettings().getFactionTypeName());
 
         int spacer = entries * (page - 1);
-        TreeIterator<FactionWorth> it = factions.iterator(spacer);
+        TreeIterator<Worth> it = worthSet.iterator(spacer);
 
         int lines = plugin.getSettings().getGuiLineCount() * 9;
         String name = StringUtils.replace(plugin.getSettings().getGuiInventoryName(), placeholders);
@@ -58,7 +63,7 @@ public class GuiManager {
         }
         Inventory inventory = plugin.getServer().createInventory(null, lines, name);
 
-        GuiContext context = new GuiContext(plugin, player, inventory, maxPage, page, it, placeholders);
+        GuiContext context = new GuiContext(plugin, player, inventory, maxPage, page, showAlliances, it, placeholders);
         context.setCurrentRank(spacer + 1);
 
         plugin.getSettings().getGuiLayout().render(context);

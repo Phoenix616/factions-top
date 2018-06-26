@@ -78,18 +78,23 @@ Header, footer and body:
 - {page:last} - Last page number.
 
 Body only:
-- {rank} - Faction rank.
+- {rank} - Faction/alliance rank.
 - {relcolor} - Relation color of the faction listed to the viewer.
-- {faction} - Faction name.
+- {name} - Faction/alliance name.
 - {worth:total} - Total worth of faction listed.
 - {count:total:spawner} - Total spawner count.
 - {worth:<worth type>} - Value of a specific worth type.
 - {count:spawner:<spawner>} - Count of a specific spawner type.
 - {count:material:<material>} - Count of a specific material.
 
-MVdW Placeholders:
+MVdW Placeholders/Clip's PlaceholderAPI:
 - {factionstop_name:*}
 - - The faction name of a rank by replacing * with a number.
 - - The faction name in last place by replacing * with "last".
 - {factionstop_rank:player}
 - - The rank of the players faction if valid, otherwise faction-not-found text.
+- {factionstop_allyname:*}
+- - The alliance name of a rank by replacing * with a number.
+- - The alliance name in last place by replacing * with "last".
+- {factionstop_ally_rank:player}
+- - The rank of the players alliance if valid, otherwise faction-not-found text.

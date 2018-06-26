@@ -14,15 +14,24 @@ public class ClipPlaceholderAPIHook implements PlaceholderHook {
     private final Function<Player, String> playerReplacer;
     private final Function<Integer, String> rankReplacer;
     private final Supplier<String> lastReplacer;
+    private final Function<Player, String> allyPlayerReplacer;
+    private final Function<Integer, String> allyRankReplacer;
+    private final Supplier<String> allyLastReplacer;
 
     public ClipPlaceholderAPIHook(Plugin plugin,
                                   Function<Player, String> playerReplacer,
                                   Function<Integer, String> rankReplacer,
-                                  Supplier<String> lastReplacer) {
+                                  Supplier<String> lastReplacer,
+                                  Function<Player, String> allyPlayerReplacer,
+                                  Function<Integer, String> allyRankReplacer,
+                                  Supplier<String> allyLastReplacer) {
         this.plugin = plugin;
         this.playerReplacer = playerReplacer;
         this.rankReplacer = rankReplacer;
         this.lastReplacer = lastReplacer;
+        this.allyPlayerReplacer = allyPlayerReplacer;
+        this.allyRankReplacer = allyRankReplacer;
+        this.allyLastReplacer = allyLastReplacer;
     }
 
     @Override
@@ -32,14 +41,26 @@ public class ClipPlaceholderAPIHook implements PlaceholderHook {
             public String onPlaceholderRequest(Player player, String identifier) {
                 if ("name:last".equals(identifier)) {
                     return lastReplacer.get();
+                } else  if ("ally_name:last".equals(identifier)) {
+                    return allyLastReplacer.get();
                 } else if ("rank:player".equals(identifier)) {
                     return playerReplacer.apply(player);
+                } else if ("ally_rank:player".equals(identifier)) {
+                    return allyPlayerReplacer.apply(player);
                 } else if (identifier.startsWith("name:")) {
                     String[] split = identifier.split(":");
                     if (split.length > 1) {
                         try {
                             int rank = Integer.parseInt(split[1]);
                             return rankReplacer.apply(rank);
+                        } catch (NumberFormatException ignored) {}
+                    }
+                } else if (identifier.startsWith("ally_name:")) {
+                    String[] split = identifier.split(":");
+                    if (split.length > 1) {
+                        try {
+                            int rank = Integer.parseInt(split[1]);
+                            return allyRankReplacer.apply(rank);
                         } catch (NumberFormatException ignored) {}
                     }
                 }

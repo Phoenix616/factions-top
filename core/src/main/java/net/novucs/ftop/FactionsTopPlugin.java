@@ -14,6 +14,9 @@ import net.novucs.ftop.manager.DatabaseManager;
 import net.novucs.ftop.manager.GuiManager;
 import net.novucs.ftop.manager.SignManager;
 import net.novucs.ftop.manager.WorthManager;
+import net.novucs.ftop.replacer.AllyLastReplacer;
+import net.novucs.ftop.replacer.AllyPlayerReplacer;
+import net.novucs.ftop.replacer.AllyRankReplacer;
 import net.novucs.ftop.replacer.LastReplacer;
 import net.novucs.ftop.replacer.PlayerReplacer;
 import net.novucs.ftop.replacer.RankReplacer;
@@ -348,10 +351,16 @@ public final class FactionsTopPlugin extends JavaPlugin {
         PlayerReplacer playerReplacer = new PlayerReplacer(this);
         RankReplacer rankReplacer = new RankReplacer(this);
         LastReplacer lastReplacer = new LastReplacer(this);
+        AllyPlayerReplacer allyPlayerReplacer = new AllyPlayerReplacer(this);
+        AllyRankReplacer allyRankReplacer = new AllyRankReplacer(this);
+        AllyLastReplacer allyLastReplacer = new AllyLastReplacer(this);
         
         Plugin mvdwPlaceholderApi = getServer().getPluginManager().getPlugin("MVdWPlaceholderAPI");
         if (mvdwPlaceholderApi != null && mvdwPlaceholderApi.isEnabled()) {
-            PlaceholderHook placeholderHook = new MVdWPlaceholderAPIHook(this, playerReplacer, rankReplacer, lastReplacer);
+            PlaceholderHook placeholderHook = new MVdWPlaceholderAPIHook(this,
+                    playerReplacer, rankReplacer, lastReplacer,
+                    allyPlayerReplacer, allyRankReplacer, allyLastReplacer
+            );
             boolean updated = placeholderHook.initialize(getSettings().getPlaceholdersEnabledRanks());
     
             placeholderHooks.add(placeholderHook);
@@ -362,7 +371,10 @@ public final class FactionsTopPlugin extends JavaPlugin {
         
         Plugin clipPlaceholderApi = getServer().getPluginManager().getPlugin("PlaceholderAPI");
         if (clipPlaceholderApi != null && clipPlaceholderApi.isEnabled()) {
-            PlaceholderHook placeholderHook = new ClipPlaceholderAPIHook(this, playerReplacer, rankReplacer, lastReplacer);
+            PlaceholderHook placeholderHook = new ClipPlaceholderAPIHook(this,
+                    playerReplacer, rankReplacer, lastReplacer,
+                    allyPlayerReplacer, allyRankReplacer, allyLastReplacer
+            );
             boolean updated = placeholderHook.initialize(getSettings().getPlaceholdersEnabledRanks());
     
             placeholderHooks.add(placeholderHook);

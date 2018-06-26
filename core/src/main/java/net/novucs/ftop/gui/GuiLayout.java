@@ -6,15 +6,15 @@ import net.novucs.ftop.gui.element.GuiElement;
 public class GuiLayout {
 
     private final ImmutableList<GuiElement> elements;
-    private final int factionsPerPage;
+    private final int entriesPerPage;
 
-    public GuiLayout(ImmutableList<GuiElement> elements, int factionsPerPage) {
+    public GuiLayout(ImmutableList<GuiElement> elements, int entriesPerPage) {
         this.elements = elements;
-        this.factionsPerPage = factionsPerPage;
+        this.entriesPerPage = entriesPerPage;
     }
 
-    public int getFactionsPerPage() {
-        return factionsPerPage;
+    public int getEntriesPerPage() {
+        return entriesPerPage;
     }
 
     public void render(GuiContext context) {

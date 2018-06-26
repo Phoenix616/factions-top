@@ -4,7 +4,7 @@ import mkremins.fanciful.FancyMessage;
 import net.novucs.ftop.FactionsTopPlugin;
 import net.novucs.ftop.PluginService;
 import net.novucs.ftop.entity.ButtonMessage;
-import net.novucs.ftop.entity.FactionWorth;
+import net.novucs.ftop.entity.Worth;
 import net.novucs.ftop.util.SplaySet;
 import net.novucs.ftop.util.TreeIterator;
 import org.apache.commons.lang.math.NumberUtils;
@@ -44,35 +44,43 @@ public class TextCommand implements CommandExecutor, PluginService {
         }
 
         if (args.length == 0) {
-            sendTop(sender, 0);
+            sendTop(sender, false, 0);
         } else {
-            sendTop(sender, NumberUtils.toInt(args[0]));
+            boolean showAlliances = args[0].toLowerCase().startsWith("ally")
+                    || args[0].toLowerCase().startsWith(plugin.getSettings().getAllianceTypeName().toLowerCase());
+            sendTop(sender, showAlliances, NumberUtils.toInt(args[args.length - 1]));
         }
         return true;
     }
 
-    private void sendTop(CommandSender sender, int page) {
+    private void sendTop(CommandSender sender, boolean showAlliances, int page) {
         // Do not attempt to send hook worth if page requested is beyond the limit.
         int entries = plugin.getSettings().getFactionsPerPage();
-        SplaySet<FactionWorth> factions = plugin.getWorthManager().getOrderedFactions();
-        int maxPage = Math.max((int) Math.ceil((double) factions.size() / entries), 1);
+        SplaySet<Worth> worthSet = showAlliances
+                ? plugin.getWorthManager().getOrderedAlliances()
+                : plugin.getWorthManager().getOrderedFactions();
+        int maxPage = Math.max((int) Math.ceil((double) worthSet.size() / entries), 1);
         page = Math.max(1, Math.min(maxPage, page));
+        String type = showAlliances
+                ? plugin.getSettings().getAllianceTypeName()
+                : plugin.getSettings().getFactionTypeName();
 
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("{page:back}", String.valueOf(page - 1));
         placeholders.put("{page:this}", String.valueOf(page));
         placeholders.put("{page:next}", String.valueOf(page + 1));
         placeholders.put("{page:last}", String.valueOf(maxPage));
+        placeholders.put("{type}", type);
 
         ButtonMessage back = plugin.getSettings().getBackButtonMessage();
         ButtonMessage next = plugin.getSettings().getNextButtonMessage();
 
         String backMsg = page == 1 ? back.getDisabled() : back.getEnabled();
-        String backCmd = page == 1 ? null : "/ftop " + (page - 1);
+        String backCmd = page == 1 ? null : "/ftop " + type + " " + (page - 1);
         List<String> backTooltip = replace(back.getTooltip(), placeholders);
 
         String nextMsg = page == maxPage ? next.getDisabled() : next.getEnabled();
-        String nextCmd = page == maxPage ? null : "/ftop " + (page + 1);
+        String nextCmd = page == maxPage ? null : "/ftop " + type + " " + (page + 1);
         List<String> nextTooltip = replace(next.getTooltip(), placeholders);
 
         if (!plugin.getSettings().getHeaderMessage().isEmpty()) {
@@ -81,22 +89,23 @@ public class TextCommand implements CommandExecutor, PluginService {
             header.send(sender);
         }
 
-        if (factions.size() == 0) {
+        if (worthSet.size() == 0) {
             sender.sendMessage(plugin.getSettings().getNoEntriesMessage());
             return;
         }
 
         int spacer = entries * --page;
-        TreeIterator<FactionWorth> it = factions.iterator(spacer);
+        TreeIterator<Worth> it = worthSet.iterator(spacer);
         for (int i = 0; i < entries; i++) {
             if (!it.hasNext()) break;
-
-            FactionWorth worth = it.next();
+    
+            Worth worth = it.next();
 
             Map<String, String> worthPlaceholders = new HashMap<>(placeholders);
             worthPlaceholders.put("{rank}", Integer.toString(spacer + i + 1));
-            worthPlaceholders.put("{relcolor}", "" + ChatColor.COLOR_CHAR + getRelationColor(plugin, sender, worth.getFactionId()).getChar());
-            worthPlaceholders.put("{faction}", worth.getName());
+            worthPlaceholders.put("{relcolor}", "" + ChatColor.COLOR_CHAR + getRelationColor(plugin, sender, showAlliances, worth.getId()).getChar());
+            worthPlaceholders.put("{name}", worth.getName());
+            worthPlaceholders.put("{faction}", worth.getName()); // backwards compatibility
             worthPlaceholders.put("{worth:total}", plugin.getSettings().getCurrencyFormat().format(worth.getTotalWorth()));
             worthPlaceholders.put("{count:total:spawner}", plugin.getSettings().getCountFormat().format(worth.getTotalSpawnerCount()));
 

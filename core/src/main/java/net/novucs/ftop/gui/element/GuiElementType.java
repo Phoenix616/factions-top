@@ -15,7 +15,8 @@ import static net.novucs.ftop.util.StringUtils.*;
 
 public enum GuiElementType {
 
-    FACTION_LIST(GuiElementType::parseFactionList),
+    WORTH_LIST(GuiElementType::parseWorthList),
+    FACTION_LIST(GuiElementType::parseWorthList), // backwards compatibility
     BUTTON_BACK(data ->
             new GuiBackButton(parseButton(getMap(data, "enabled").orElse(Collections.emptyMap())),
                     parseButton(getMap(data, "disabled").orElse(Collections.emptyMap())))
@@ -35,11 +36,14 @@ public enum GuiElementType {
         return parser;
     }
 
-    private static GuiFactionList parseFactionList(Map<?,?> element) {
-        GuiFactionList.Builder builder = new GuiFactionList.Builder();
-        Optional<Integer> factionCount = getInt(element, "faction-count");
-        if (factionCount.isPresent()) {
-            builder.factionCount(factionCount.get());
+    private static GuiWorthList parseWorthList(Map<?,?> element) {
+        GuiWorthList.Builder builder = new GuiWorthList.Builder();
+        Optional<Integer> count = getInt(element, "count");
+        if (!count.isPresent()) {
+            count = getInt(element, "faction-count"); // backwards compatibility
+        }
+        if (count.isPresent()) {
+            builder.factionCount(count.get());
         }
 
         Optional<Boolean> fillEmpty = getBoolean(element, "fill-empty");

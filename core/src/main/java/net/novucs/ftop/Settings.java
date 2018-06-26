@@ -8,7 +8,7 @@ import net.novucs.ftop.entity.ButtonMessage;
 import net.novucs.ftop.gui.GuiLayout;
 import net.novucs.ftop.gui.element.GuiElement;
 import net.novucs.ftop.gui.element.GuiElementType;
-import net.novucs.ftop.gui.element.GuiFactionList;
+import net.novucs.ftop.gui.element.GuiWorthList;
 import net.novucs.ftop.hook.VaultEconomyHook;
 import net.novucs.ftop.util.GenericUtils;
 import org.bukkit.Material;
@@ -68,10 +68,10 @@ public class Settings {
                             "data", 14
                     )),
             ImmutableMap.of(
-                    "type", "faction_list",
-                    "faction-count", 7,
+                    "type", "worth_list",
+                    "count", 7,
                     "fill-empty", true,
-                    "text", "&e{rank}. {relcolor}{faction} &b{worth:total}",
+                    "text", "&e{rank}. {relcolor}{name} &b{worth:total}",
                     "lore", new ArrayList<>(WORTH_HOVER)
             ),
             ImmutableMap.of(
@@ -100,6 +100,8 @@ public class Settings {
     private DecimalFormat currencyFormat;
     private ButtonMessage backButtonMessage;
     private ButtonMessage nextButtonMessage;
+    private String factionTypeName;
+    private String allianceTypeName;
     private String headerMessage;
     private String noEntriesMessage;
     private String bodyMessage;
@@ -119,6 +121,7 @@ public class Settings {
     // General settings.
     private List<String> commandAliases;
     private List<String> ignoredFactionIds;
+    private List<String> ignoredAllianceIds;
     private boolean disableChestEvents;
     private int factionsPerPage;
     private int signUpdateTicks;
@@ -140,7 +143,7 @@ public class Settings {
     private Map<RecalculateReason, Boolean> bypassRecalculateDelay;
     private Map<EntityType, Double> spawnerPrices;
     private Map<Material, Double> blockPrices;
-
+    
     public Settings(FactionsTopPlugin plugin) {
         this.plugin = plugin;
     }
@@ -156,9 +159,17 @@ public class Settings {
     public ButtonMessage getBackButtonMessage() {
         return backButtonMessage;
     }
-
+    
     public ButtonMessage getNextButtonMessage() {
         return nextButtonMessage;
+    }
+    
+    public String getFactionTypeName() {
+        return factionTypeName;
+    }
+    
+    public String getAllianceTypeName() {
+        return allianceTypeName;
     }
 
     public String getHeaderMessage() {
@@ -219,6 +230,10 @@ public class Settings {
 
     public List<String> getIgnoredFactionIds() {
         return ignoredFactionIds;
+    }
+    
+    public List<String> getIgnoredAllianceIds() {
+        return ignoredAllianceIds;
     }
 
     public boolean isDisableChestEvents() {
@@ -427,15 +442,15 @@ public class Settings {
                     elements.add(guiElementType.getParser().parse(element)));
         }
 
-        int factionsPerPage = 0;
+        int entriesPerPage = 0;
 
         for (GuiElement element : elements) {
-            if (element instanceof GuiFactionList) {
-                factionsPerPage += ((GuiFactionList) element).getFactionCount();
+            if (element instanceof GuiWorthList) {
+                entriesPerPage += ((GuiWorthList) element).getCount();
             }
         }
 
-        return new GuiLayout(ImmutableList.copyOf(elements), factionsPerPage);
+        return new GuiLayout(ImmutableList.copyOf(elements), entriesPerPage);
     }
 
     private HikariConfig loadHikariConfig() {
@@ -474,11 +489,13 @@ public class Settings {
         countFormat = new DecimalFormat(getString("messages.count-format", "#,###"));
         currencyFormat = new DecimalFormat(getString("messages.currency-format", "$#,###.##"));
         backButtonMessage = getButtonMessage("messages.button-back",
-                new ButtonMessage("&b[<]", "&7[<]", Collections.singletonList("&dCommand: &b/f top {page:back}")));
+                new ButtonMessage("&b[<]", "&7[<]", Collections.singletonList("&dCommand: &b/f top {type} {page:back}")));
         nextButtonMessage = getButtonMessage("messages.button-next",
-                new ButtonMessage("&b[>]", "&7[>]", Collections.singletonList("&dCommand: &b/f top {page:next}")));
+                new ButtonMessage("&b[>]", "&7[>]", Collections.singletonList("&dCommand: &b/f top {type} {page:next}")));
+        factionTypeName = format(getString("messages.type.faction", "Faction"));
+        allianceTypeName = format(getString("messages.type.alliance", "Alliance"));
         headerMessage = format(getString("messages.header",
-                "&6_______.[ &2Top Factions {button:back} &6{page:this}/{page:last} {button:next} &6]._______"));
+                "&6_______.[ &2Top {type}s {button:back} &6{page:this}/{page:last} {button:next} &6]._______"));
         noEntriesMessage = format(getString("messages.no-entries", "&eNo entries to be displayed."));
         bodyMessage = format(getString("messages.body.text", "&e{rank}. {relcolor}{faction} &b{worth:total}"));
         bodyTooltip = format(getList("messages.body.tooltip", new ArrayList<>(WORTH_HOVER), String.class));
@@ -493,12 +510,13 @@ public class Settings {
 
         guiCommandAliases = getList("gui-settings.command-aliases", Collections.singletonList("f topgui"), String.class);
         guiLineCount = getInt("gui-settings.line-count", 1);
-        guiInventoryName = format(getString("gui-settings.inventory-name", "&lTop Factions | Page {page:this}"));
+        guiInventoryName = format(getString("gui-settings.inventory-name", "&lTop {type}s | Page {page:this}"));
         guiLayout = loadGuiLayout();
 
         commandAliases = getList("settings.command-aliases", Collections.singletonList("f top"), String.class);
         ignoredFactionIds = getList("settings.ignored-faction-ids",
                 Arrays.asList("none", "safezone", "warzone", "0", "-1", "-2"), String.class);
+        ignoredAllianceIds = getList("settings.ignored-alliance-ids", Arrays.asList("0", "-1", "-2"), String.class);
         disableChestEvents = getBoolean("settings.disable-chest-events", false);
         factionsPerPage = getInt("settings.factions-per-page", 9);
         signUpdateTicks = getInt("settings.sign-update-ticks", 1);

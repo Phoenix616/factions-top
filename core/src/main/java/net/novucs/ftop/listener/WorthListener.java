@@ -39,7 +39,8 @@ public class WorthListener extends BukkitRunnable implements Listener, PluginSer
     private final FactionsTopPlugin plugin;
     private final Map<BlockPos, ChestWorth> chests = new HashMap<>();
     private final Set<String> recentDisbands = new HashSet<>();
-
+    private final Set<String> recentAllianceDisbands = new HashSet<>();
+    
     public WorthListener(FactionsTopPlugin plugin) {
         this.plugin = plugin;
     }
@@ -59,6 +60,7 @@ public class WorthListener extends BukkitRunnable implements Listener, PluginSer
     @Override
     public void run() {
         recentDisbands.clear();
+        recentAllianceDisbands.clear();
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -306,6 +308,33 @@ public class WorthListener extends BukkitRunnable implements Listener, PluginSer
         double balance = plugin.getEconomyHook().getBalance(event.getPlayer());
         plugin.getWorthManager().add(event.getFactionId(), WorthType.PLAYER_BALANCE, -balance);
     }
+    
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void removeAlliance(AllianceDisbandEvent event) {
+        recentAllianceDisbands.add(event.getAllianceId());
+        plugin.getWorthManager().removeAlliance(event.getAllianceId());
+    }
+    
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void renameAlliance(AllianceRenameEvent event) {
+        plugin.getWorthManager().renameAlliance(event.getAllianceId(), event.getNewName());
+    }
+    
+    
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void updateWorth(AllianceJoinEvent event) {
+        plugin.getWorthManager().addToAlliance(event.getAllianceId(), event.getFactionId());
+    }
+    
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void updateWorth(AllianceLeaveEvent event) {
+        // Do nothing if the alliance was disbanded within this tick.
+        if (recentAllianceDisbands.contains(event.getAllianceId())) {
+            return;
+        }
+        
+        plugin.getWorthManager().removeFromAlliance(event.getAllianceId(), event.getFactionId());
+    }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void recalculate(ChunkUnloadEvent event) {
@@ -336,4 +365,5 @@ public class WorthListener extends BukkitRunnable implements Listener, PluginSer
         // Add block price to the count.
         plugin.getWorthManager().add(block.getChunk(), reason, worthType, price, materials, spawners);
     }
+    
 }

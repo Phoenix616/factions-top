@@ -17,15 +17,24 @@ public class MVdWPlaceholderAPIHook implements PlaceholderHook {
     private final Function<Player, String> playerReplacer;
     private final Function<Integer, String> rankReplacer;
     private final Supplier<String> lastReplacer;
-
+    private final Function<Player, String> allyPlayerReplacer;
+    private final Function<Integer, String> allyRankReplacer;
+    private final Supplier<String> allyLastReplacer;
+    
     public MVdWPlaceholderAPIHook(Plugin plugin,
                                   Function<Player, String> playerReplacer,
                                   Function<Integer, String> rankReplacer,
-                                  Supplier<String> lastReplacer) {
+                                  Supplier<String> lastReplacer,
+                                  Function<Player, String> allyPlayerReplacer,
+                                  Function<Integer, String> allyRankReplacer,
+                                  Supplier<String> allyLastReplacer) {
         this.plugin = plugin;
         this.playerReplacer = playerReplacer;
         this.rankReplacer = rankReplacer;
         this.lastReplacer = lastReplacer;
+        this.allyPlayerReplacer = allyPlayerReplacer;
+        this.allyRankReplacer = allyRankReplacer;
+        this.allyLastReplacer = allyLastReplacer;
     }
 
     @Override
@@ -42,6 +51,23 @@ public class MVdWPlaceholderAPIHook implements PlaceholderHook {
 
         PlayerReplacer playerReplacer = new PlayerReplacer(this.playerReplacer);
         if (PlaceholderAPI.registerPlaceholder(plugin, "factionstop_rank:player", playerReplacer)) {
+            updated = true;
+        }
+
+        LastReplacer allyLastReplacer = new LastReplacer(this.allyLastReplacer);
+        if (PlaceholderAPI.registerPlaceholder(plugin, "factionstop_ally_name:last", allyLastReplacer)) {
+            updated = true;
+        }
+    
+        for (int rank : enabledRanks) {
+            RankReplacer replacer = new RankReplacer(allyRankReplacer, rank);
+            if (PlaceholderAPI.registerPlaceholder(plugin, "factionstop_ally_name:" + rank, replacer)) {
+                updated = true;
+            }
+        }
+
+        PlayerReplacer allyPlayerReplacer = new PlayerReplacer(this.allyPlayerReplacer);
+        if (PlaceholderAPI.registerPlaceholder(plugin, "factionstop_ally_rank:player", allyPlayerReplacer)) {
             updated = true;
         }
 

@@ -22,7 +22,7 @@ public class GuiBackButton extends GuiBiStateButton {
     @Override
     public void handleClick(GuiContext context) {
         if (context.hasPrevPage()) {
-            context.getPlugin().getGuiManager().sendGui(context.getPlayer(), context.getThisPage() - 1);
+            context.getPlugin().getGuiManager().sendGui(context.getPlayer(), context.isShowingAlliances(), context.getThisPage() - 1);
         }
     }
 }

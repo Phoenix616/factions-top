@@ -6,6 +6,7 @@ import net.novucs.ftop.FactionsTopPlugin;
 import net.novucs.ftop.PluginService;
 import net.novucs.ftop.entity.BlockPos;
 import net.novucs.ftop.entity.FactionWorth;
+import net.novucs.ftop.entity.Worth;
 import net.novucs.ftop.util.SplaySet;
 import org.bukkit.ChatColor;
 import org.bukkit.block.Block;
@@ -54,14 +55,14 @@ public class SignManager extends BukkitRunnable implements PluginService, Listen
 
     @Override
     public void run() {
-        SplaySet<FactionWorth> factions = plugin.getWorthManager().getOrderedFactions();
+        SplaySet<Worth> factions = plugin.getWorthManager().getOrderedFactions();
 
         for (Map.Entry<Integer, Collection<BlockPos>> entry : signs.asMap().entrySet()) {
             // Do nothing if rank is higher than factions size.
             if (entry.getKey() >= factions.size()) continue;
 
             // Get the faction worth.
-            FactionWorth worth = factions.byIndex(entry.getKey());
+            Worth worth = factions.byIndex(entry.getKey());
 
             // Do not update signs if previous value is unchanged.
             double previousWorth = previous.getOrDefault(entry.getKey(), 0d);
@@ -95,10 +96,17 @@ public class SignManager extends BukkitRunnable implements PluginService, Listen
             return;
         }
 
+        String line = event.getLine(1);
+        boolean isAlly = false;
+        if (line.toLowerCase().startsWith("ally ")) {
+            isAlly = true;
+            line = line.substring(line.indexOf(' '));
+        }
+        
         // Attempt to parse the rank for this sign.
         int rank;
         try {
-            rank = Integer.parseInt(event.getLine(1));
+            rank = Integer.parseInt(line);
         } catch (NumberFormatException e) {
             event.getPlayer().sendMessage(ChatColor.RED + "Invalid rank number on line 2!");
             event.setLine(0, ChatColor.DARK_RED + "[FactionsTop]");
@@ -106,13 +114,15 @@ public class SignManager extends BukkitRunnable implements PluginService, Listen
         }
 
         event.setLine(0, ChatColor.DARK_BLUE + "[FactionsTop]");
-        event.setLine(1, "#" + Math.max(rank, 1));
+        event.setLine(1, isAlly ? "Ally " : "" + "#" + Math.max(rank, 1));
 
         rank = Math.max(rank - 1, 0);
-        SplaySet<FactionWorth> factions = plugin.getWorthManager().getOrderedFactions();
+        SplaySet<Worth> worths = isAlly
+                ? plugin.getWorthManager().getOrderedAlliances()
+                : plugin.getWorthManager().getOrderedFactions();
 
-        if (factions.size() > rank) {
-            FactionWorth worth = factions.byIndex(rank);
+        if (worths.size() > rank) {
+            Worth worth = worths.byIndex(rank);
             event.setLine(2, worth.getName());
             event.setLine(3, plugin.getSettings().getCurrencyFormat().format(worth.getTotalWorth()));
         } else {

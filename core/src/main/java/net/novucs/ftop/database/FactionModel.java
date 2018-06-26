@@ -28,7 +28,7 @@ public class FactionModel {
     public void persist(Set<FactionWorth> factions, Set<String> deletedFactions) throws SQLException {
         init();
 
-        factions.removeIf(factionWorth -> deletedFactions.contains(factionWorth.getFactionId()));
+        factions.removeIf(factionWorth -> deletedFactions.contains(factionWorth.getId()));
 
         persistNames(factions);
 
@@ -95,7 +95,7 @@ public class FactionModel {
         Set<FactionWorth> createdFactions = new HashSet<>();
 
         for (FactionWorth factionWorth : factions) {
-            if (identityCache.hasFaction(factionWorth.getFactionId())) {
+            if (identityCache.hasFaction(factionWorth.getId())) {
                 updateFaction(factionWorth);
             } else {
                 insertFaction(createdFactions, factionWorth);
@@ -112,12 +112,12 @@ public class FactionModel {
         update.setString(1, faction.getName());
         update.setDouble(2, faction.getTotalWorth());
         update.setInt(3, faction.getTotalSpawnerCount());
-        update.setString(4, faction.getFactionId());
+        update.setString(4, faction.getId());
         update.addBatch();
     }
 
     private void insertFaction(Set<FactionWorth> createdFactions, FactionWorth factionWorth) throws SQLException {
-        insert.setString(1, factionWorth.getFactionId());
+        insert.setString(1, factionWorth.getId());
         insert.setString(2, factionWorth.getName());
         insert.setDouble(3, factionWorth.getTotalWorth());
         insert.setInt(4, factionWorth.getTotalSpawnerCount());
@@ -130,7 +130,7 @@ public class FactionModel {
 
         for (FactionWorth factionWorth : createdFactions) {
             if (resultSet.next()) {
-                identityCache.addFaction(factionWorth.getFactionId());
+                identityCache.addFaction(factionWorth.getId());
             }
         }
 
@@ -147,9 +147,9 @@ public class FactionModel {
         worthModel.addBatchDelete(deletedFactions);
 
         for (FactionWorth faction : factions) {
-            materialModel.addBatch(faction.getFactionId(), faction.getMaterials());
-            spawnerModel.addBatch(faction.getFactionId(), faction.getSpawners());
-            worthModel.addBatch(faction.getFactionId(), faction.getWorth());
+            materialModel.addBatch(faction.getId(), faction.getMaterials());
+            spawnerModel.addBatch(faction.getId(), faction.getSpawners());
+            worthModel.addBatch(faction.getId(), faction.getWorth());
         }
 
         materialModel.executeBatch();

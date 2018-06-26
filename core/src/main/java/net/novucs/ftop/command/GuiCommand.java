@@ -41,9 +41,11 @@ public class GuiCommand implements CommandExecutor, PluginService {
         Player player = (Player) sender;
 
         if (args.length == 0) {
-            plugin.getGuiManager().sendGui(player, 0);
+            plugin.getGuiManager().sendGui(player, false, 0);
         } else {
-            plugin.getGuiManager().sendGui(player, NumberUtils.toInt(args[0]));
+            boolean showAlliances = args[0].toLowerCase().startsWith("ally")
+                    || args[0].toLowerCase().startsWith(plugin.getSettings().getAllianceTypeName().toLowerCase());
+            plugin.getGuiManager().sendGui(player, showAlliances, NumberUtils.toInt(args[args.length - 1]));
         }
         return true;
     }

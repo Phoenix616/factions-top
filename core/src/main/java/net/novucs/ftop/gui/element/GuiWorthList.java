@@ -2,7 +2,7 @@ package net.novucs.ftop.gui.element;
 
 import net.novucs.ftop.FactionsTopPlugin;
 import net.novucs.ftop.Settings;
-import net.novucs.ftop.entity.FactionWorth;
+import net.novucs.ftop.entity.Worth;
 import net.novucs.ftop.gui.GuiContext;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -14,15 +14,15 @@ import java.util.*;
 
 import static net.novucs.ftop.util.StringUtils.*;
 
-public class GuiFactionList implements GuiElement {
+public class GuiWorthList implements GuiElement {
 
-    private final int factionCount;
+    private final int count;
     private final boolean fillEmpty;
     private final String text;
     private final List<String> lore;
 
-    private GuiFactionList(int factionCount, boolean fillEmpty, String text, List<String> lore) {
-        this.factionCount = factionCount;
+    private GuiWorthList(int count, boolean fillEmpty, String text, List<String> lore) {
+        this.count = count;
         this.fillEmpty = fillEmpty;
         this.text = text;
         this.lore = lore;
@@ -35,7 +35,7 @@ public class GuiFactionList implements GuiElement {
         DecimalFormat countFormat = plugin.getSettings().getCountFormat();
 
         int counter = 0;
-        while (counter++ < factionCount) {
+        while (counter++ < count) {
             if (context.getInventory().getSize() <= context.getSlot()) {
                 break;
             }
@@ -50,16 +50,19 @@ public class GuiFactionList implements GuiElement {
                 continue;
             }
 
-            FactionWorth worth = context.getWorthIterator().next();
+            Worth worth = context.getWorthIterator().next();
             Map<String, String> placeholders = new HashMap<>(context.getPlaceholders());
             placeholders.put("{rank}", Integer.toString(context.getAndIncrementRank()));
             placeholders.put("{relcolor}", "" + ChatColor.COLOR_CHAR +
-                    getRelationColor(plugin, context.getPlayer(), worth.getFactionId()).getChar());
-            placeholders.put("{faction}", worth.getName());
+                    getRelationColor(plugin, context.getPlayer(), context.isShowingAlliances(), worth.getId()).getChar());
+            placeholders.put("{name}", worth.getName());
+            placeholders.put("{faction}", worth.getName()); // backwards compatibility
             placeholders.put("{worth:total}", currencyFormat.format(worth.getTotalWorth()));
             placeholders.put("{count:total:spawner}", countFormat.format(worth.getTotalSpawnerCount()));
 
-            String owner = plugin.getFactionsHook().getOwnerName(worth.getFactionId());
+            String owner = context.isShowingAlliances()
+                    ? plugin.getFactionsHook().getAllianceOwnerName(worth.getId())
+                    : plugin.getFactionsHook().getOwnerName(worth.getId());
             ItemStack item = getItem(worth, placeholders, plugin.getSettings(), owner);
             context.getInventory().setItem(context.getAndIncrementSlot(), item);
         }
@@ -69,11 +72,11 @@ public class GuiFactionList implements GuiElement {
     public void handleClick(GuiContext context) {
     }
 
-    public int getFactionCount() {
-        return factionCount;
+    public int getCount() {
+        return count;
     }
 
-    private ItemStack getItem(FactionWorth worth, Map<String, String> placeholders, Settings settings, String owner) {
+    private ItemStack getItem(Worth worth, Map<String, String> placeholders, Settings settings, String owner) {
         String text = insertPlaceholders(settings, worth, replace(this.text, placeholders));
         List<String> lore = insertPlaceholders(settings, worth, replace(this.lore, placeholders));
 
@@ -93,8 +96,8 @@ public class GuiFactionList implements GuiElement {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        GuiFactionList that = (GuiFactionList) o;
-        return factionCount == that.factionCount &&
+        GuiWorthList that = (GuiWorthList) o;
+        return count == that.count &&
                 fillEmpty == that.fillEmpty &&
                 Objects.equals(text, that.text) &&
                 Objects.equals(lore, that.lore);
@@ -102,13 +105,13 @@ public class GuiFactionList implements GuiElement {
 
     @Override
     public int hashCode() {
-        return Objects.hash(factionCount, fillEmpty, text, lore);
+        return Objects.hash(count, fillEmpty, text, lore);
     }
 
     @Override
     public String toString() {
-        return "GuiFactionList{" +
-                "factionCount=" + factionCount +
+        return "GuiWorthList{" +
+                "count=" + count +
                 ", fillEmpty=" + fillEmpty +
                 ", text='" + text + '\'' +
                 ", lore=" + lore +
@@ -116,13 +119,13 @@ public class GuiFactionList implements GuiElement {
     }
 
     public static class Builder {
-        private int factionCount = 0;
+        private int count = 0;
         private boolean fillEmpty = true;
         private String text = "";
         private List<String> lore = new ArrayList<>();
 
         public void factionCount(int factionCount) {
-            this.factionCount = factionCount;
+            this.count = factionCount;
         }
 
         public void fillEmpty(boolean fillEmpty) {
@@ -137,8 +140,8 @@ public class GuiFactionList implements GuiElement {
             this.lore = lore;
         }
 
-        public GuiFactionList build() {
-            return new GuiFactionList(factionCount, fillEmpty, text, lore);
+        public GuiWorthList build() {
+            return new GuiWorthList(count, fillEmpty, text, lore);
         }
 
         @Override
@@ -146,7 +149,7 @@ public class GuiFactionList implements GuiElement {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             Builder builder = (Builder) o;
-            return factionCount == builder.factionCount &&
+            return count == builder.count &&
                     fillEmpty == builder.fillEmpty &&
                     Objects.equals(text, builder.text) &&
                     Objects.equals(lore, builder.lore);
@@ -154,13 +157,13 @@ public class GuiFactionList implements GuiElement {
 
         @Override
         public int hashCode() {
-            return Objects.hash(factionCount, fillEmpty, text, lore);
+            return Objects.hash(count, fillEmpty, text, lore);
         }
 
         @Override
         public String toString() {
             return "Builder{" +
-                    "factionCount=" + factionCount +
+                    "count=" + count +
                     ", fillEmpty=" + fillEmpty +
                     ", text='" + text + '\'' +
                     ", lore=" + lore +

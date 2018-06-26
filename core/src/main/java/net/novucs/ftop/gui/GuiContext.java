@@ -1,7 +1,7 @@
 package net.novucs.ftop.gui;
 
 import net.novucs.ftop.FactionsTopPlugin;
-import net.novucs.ftop.entity.FactionWorth;
+import net.novucs.ftop.entity.Worth;
 import net.novucs.ftop.gui.element.GuiElement;
 import net.novucs.ftop.util.TreeIterator;
 import org.bukkit.entity.Player;
@@ -18,19 +18,21 @@ public class GuiContext {
     private final Inventory inventory;
     private final int maxPage;
     private final int thisPage;
-    private final TreeIterator<FactionWorth> worthIterator;
+    private final TreeIterator<Worth> worthIterator;
     private final Map<String, String> placeholders;
     private final List<GuiElement> slots = new ArrayList<>();
     private int currentRank;
     private int slot;
-
+    private boolean showingAlliances;
+    
     public GuiContext(FactionsTopPlugin plugin, Player player, Inventory inventory, int maxPage, int thisPage,
-                      TreeIterator<FactionWorth> worthIterator, Map<String, String> placeholders) {
+                      boolean showingAlliances, TreeIterator<Worth> worthIterator, Map<String, String> placeholders) {
         this.plugin = plugin;
         this.player = player;
         this.inventory = inventory;
         this.maxPage = maxPage;
         this.thisPage = thisPage;
+        this.showingAlliances = showingAlliances;
         this.worthIterator = worthIterator;
         this.placeholders = placeholders;
     }
@@ -55,7 +57,7 @@ public class GuiContext {
         return thisPage;
     }
 
-    public TreeIterator<FactionWorth> getWorthIterator() {
+    public TreeIterator<Worth> getWorthIterator() {
         return worthIterator;
     }
 
@@ -97,5 +99,9 @@ public class GuiContext {
 
     public int getAndIncrementSlot() {
         return slot++;
+    }
+    
+    public boolean isShowingAlliances() {
+        return showingAlliances;
     }
 }

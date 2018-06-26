@@ -3,12 +3,17 @@ package net.novucs.ftop.hook;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import net.novucs.ftop.entity.ChunkPos;
+import net.novucs.ftop.hook.event.AllianceDisbandEvent;
+import net.novucs.ftop.hook.event.AllianceJoinEvent;
+import net.novucs.ftop.hook.event.AllianceLeaveEvent;
+import net.novucs.ftop.hook.event.AllianceRenameEvent;
 import net.novucs.ftop.hook.event.FactionClaimEvent;
 import net.novucs.ftop.hook.event.FactionDisbandEvent;
 import net.novucs.ftop.hook.event.FactionJoinEvent;
 import net.novucs.ftop.hook.event.FactionLeaveEvent;
 import net.novucs.ftop.hook.event.FactionRenameEvent;
 import net.redstoneore.legacyfactions.FLocation;
+import net.redstoneore.legacyfactions.Relation;
 import net.redstoneore.legacyfactions.entity.Board;
 import net.redstoneore.legacyfactions.entity.FPlayer;
 import net.redstoneore.legacyfactions.entity.FPlayerColl;
@@ -18,12 +23,14 @@ import net.redstoneore.legacyfactions.event.EventFactionsChange;
 import net.redstoneore.legacyfactions.event.EventFactionsDisband;
 import net.redstoneore.legacyfactions.event.EventFactionsLandChange;
 import net.redstoneore.legacyfactions.event.EventFactionsNameChange;
+import net.redstoneore.legacyfactions.event.EventFactionsRelationChange;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.plugin.Plugin;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -66,14 +73,46 @@ public class LegacyFactions0103 extends FactionsHook {
     public boolean isFaction(String factionId) {
         return FactionColl.get().getFactionById(factionId) != null;
     }
-
+    
+    @Override
+    public String getAlliance(String factionId) {
+        return factionId;
+    }
+    
+    @Override
+    public String getAllianceName(String allianceId) {
+        return getFactionName(allianceId);
+    }
+    
+    @Override
+    public List<String> getAllianceMembers(String allianceId) {
+        Faction faction = FactionColl.get().getFactionById(allianceId);
+        List<String> allianceMembers = new ArrayList<>();
+        if (faction != null) {
+            allianceMembers.add(faction.getId());
+            for (Faction f : FactionColl.get().getAllFactions()) {
+                if (f != faction && faction.getRelationTo(f) == Relation.ALLY) {
+                    allianceMembers.add(f.getId());
+                }
+            }
+        }
+        return allianceMembers;
+    }
+    
     @Override
     public ChatColor getRelation(Player player, String factionId) {
         FPlayer fplayer = FPlayerColl.get(player);
         Faction faction = FactionColl.get().getFactionById(factionId);
         return fplayer.getFaction().getRelationTo(faction).getColor();
     }
-
+    
+    @Override
+    public ChatColor getRelation(String factionId, String allianceId) {
+        Faction faction = FactionColl.get().getFactionById(factionId);
+        Faction otherFaction = FactionColl.get().getFactionById(allianceId);
+        return faction.getRelationTo(otherFaction).getColor();
+    }
+    
     @Override
     public String getOwnerName(String factionId) {
         Faction faction = FactionColl.get().getFactionById(factionId);
@@ -84,6 +123,11 @@ public class LegacyFactions0103 extends FactionsHook {
 
         FPlayer owner = faction.getOwner();
         return owner == null ? null : owner.getName();
+    }
+    
+    @Override
+    public String getAllianceOwnerName(String allianceId) {
+        return getOwnerName(allianceId);
     }
 
     @Override
@@ -112,6 +156,27 @@ public class LegacyFactions0103 extends FactionsHook {
         String factionId = event.getFaction().getId();
         String factionName = event.getFaction().getTag();
         callEvent(new FactionDisbandEvent(factionId, factionName));
+        callEvent(new AllianceDisbandEvent(factionId, factionName));
+        for (Faction f : FactionColl.get().getAllFactions()) {
+            if (f != event.getFaction() && event.getFaction().getRelationTo(f) == Relation.ALLY) {
+                callEvent(new AllianceLeaveEvent(f.getId(), factionId));
+            }
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onRelationChange(EventFactionsRelationChange event) {
+        if (event.getCurrentRelation() == event.getTargetRelation()) {
+            return;
+        }
+        
+        if (event.getTargetRelation() == Relation.ALLY) {
+            callEvent(new AllianceJoinEvent(event.getFaction().getId(), event.getTargetFaction().getId()));
+            callEvent(new AllianceJoinEvent(event.getTargetFaction().getId(), event.getFaction().getId()));
+        } else if (event.getCurrentRelation() == Relation.ALLY) {
+            callEvent(new AllianceLeaveEvent(event.getFaction().getId(), event.getTargetFaction().getId()));
+            callEvent(new AllianceLeaveEvent(event.getTargetFaction().getId(), event.getFaction().getId()));
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -120,6 +185,7 @@ public class LegacyFactions0103 extends FactionsHook {
         String oldName = event.getFaction().getTag();
         String newName = event.getFactionTag();
         callEvent(new FactionRenameEvent(factionId, oldName, newName));
+        callEvent(new AllianceRenameEvent(factionId, oldName, newName));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

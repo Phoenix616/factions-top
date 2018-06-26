@@ -6,22 +6,22 @@ import net.novucs.ftop.util.SplaySet;
 
 import java.util.function.Supplier;
 
-public class LastReplacer implements Supplier<String> {
+public class AllyLastReplacer implements Supplier<String> {
 
     private final FactionsTopPlugin plugin;
 
-    public LastReplacer(FactionsTopPlugin plugin) {
+    public AllyLastReplacer(FactionsTopPlugin plugin) {
         this.plugin = plugin;
     }
 
     @Override
     public String get() {
-        SplaySet<Worth> factions = plugin.getWorthManager().getOrderedFactions();
+        SplaySet<Worth> alliances = plugin.getWorthManager().getOrderedAlliances();
 
-        if (factions.isEmpty()) {
+        if (alliances.isEmpty()) {
             return plugin.getSettings().getPlaceholdersFactionNotFound();
         }
 
-        return factions.last().getName();
+        return alliances.last().getName();
     }
 }

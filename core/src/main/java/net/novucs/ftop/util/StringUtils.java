@@ -3,7 +3,7 @@ package net.novucs.ftop.util;
 import net.novucs.ftop.FactionsTopPlugin;
 import net.novucs.ftop.Settings;
 import net.novucs.ftop.WorthType;
-import net.novucs.ftop.entity.FactionWorth;
+import net.novucs.ftop.entity.Worth;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
@@ -18,23 +18,29 @@ public final class StringUtils {
 
     private StringUtils() {
     }
-
+    
     public static String format(String message) {
         return ChatColor.translateAlternateColorCodes('&', message);
     }
-
+    
     public static List<String> format(List<String> messages) {
         return messages.stream()
                 .map(StringUtils::format)
                 .collect(Collectors.toList());
     }
-
+    
     public static ChatColor getRelationColor(FactionsTopPlugin plugin, CommandSender sender, String factionId) {
+        return getRelationColor(plugin, sender, false, factionId);
+    }
+
+    public static ChatColor getRelationColor(FactionsTopPlugin plugin, CommandSender sender, boolean isAlliance, String id) {
         if (!(sender instanceof Player)) {
             return ChatColor.WHITE;
         }
 
-        ChatColor relationColor = plugin.getFactionsHook().getRelation((Player) sender, factionId);
+        ChatColor relationColor = isAlliance
+                ? plugin.getFactionsHook().getRelation(plugin.getFactionsHook().getFaction((Player) sender), id)
+                : plugin.getFactionsHook().getRelation((Player) sender, id);
         return relationColor == null ? ChatColor.WHITE : relationColor;
     }
 
@@ -56,7 +62,7 @@ public final class StringUtils {
         return first + replacer.replace(next.substring(0, index)) + insertPlaceholders(replacer, key, next.substring(index + 1));
     }
 
-    public static String insertPlaceholders(Settings settings, FactionWorth worth, String message) {
+    public static String insertPlaceholders(Settings settings, Worth worth, String message) {
         message = insertPlaceholders((s) -> {
             double value = worth.getWorth(GenericUtils.parseEnum(WorthType.class, s).orElse(null));
             return settings.getCurrencyFormat().format(value);
@@ -75,7 +81,7 @@ public final class StringUtils {
         return message;
     }
 
-    public static List<String> insertPlaceholders(Settings settings, FactionWorth worth, List<String> messages) {
+    public static List<String> insertPlaceholders(Settings settings, Worth worth, List<String> messages) {
         return messages.stream()
                 .map(message -> insertPlaceholders(settings, worth, message))
                 .collect(Collectors.toList());

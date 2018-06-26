@@ -10,11 +10,17 @@ import com.massivecraft.factions.Faction;
 import com.massivecraft.factions.Factions;
 import com.massivecraft.factions.event.FPlayerJoinEvent;
 import com.massivecraft.factions.event.FPlayerLeaveEvent;
+import com.massivecraft.factions.event.FactionRelationEvent;
 import com.massivecraft.factions.event.LandClaimEvent;
 import com.massivecraft.factions.event.LandUnclaimAllEvent;
 import com.massivecraft.factions.event.LandUnclaimEvent;
+import com.massivecraft.factions.struct.Rel;
 import com.massivecraft.factions.struct.TerritoryAccess;
 import net.novucs.ftop.entity.ChunkPos;
+import net.novucs.ftop.hook.event.AllianceDisbandEvent;
+import net.novucs.ftop.hook.event.AllianceJoinEvent;
+import net.novucs.ftop.hook.event.AllianceLeaveEvent;
+import net.novucs.ftop.hook.event.AllianceRenameEvent;
 import net.novucs.ftop.hook.event.FactionClaimEvent;
 import net.novucs.ftop.hook.event.FactionDisbandEvent;
 import net.novucs.ftop.hook.event.FactionJoinEvent;
@@ -27,6 +33,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -78,18 +85,55 @@ public class Factions0108 extends FactionsHook {
     public boolean isFaction(String factionId) {
         return Factions.i.get(factionId) != null;
     }
-
+    
+    @Override
+    public String getAlliance(String factionId) {
+        return factionId;
+    }
+    
+    @Override
+    public String getAllianceName(String allianceId) {
+        return getFactionName(allianceId);
+    }
+    
+    @Override
+    public List<String> getAllianceMembers(String allianceId) {
+        Faction faction = Factions.i.get(allianceId);
+        List<String> allianceMembers = new ArrayList<>();
+        if (faction != null) {
+            allianceMembers.add(faction.getId());
+            for (Faction f : Factions.i.get()) {
+                if (f != faction && faction.getRelationTo(f) == Rel.ALLY) {
+                    allianceMembers.add(f.getId());
+                }
+            }
+        }
+        return allianceMembers;
+    }
+    
     @Override
     public ChatColor getRelation(Player player, String factionId) {
         FPlayer fplayer = FPlayers.i.get(player);
         Faction faction = Factions.i.get(factionId);
         return fplayer.getFaction().getRelationTo(faction).getColor();
     }
+    
+    @Override
+    public ChatColor getRelation(String factionId, String allianceId) {
+        Faction faction = Factions.i.get(factionId);
+        Faction otherFaction = Factions.i.get(allianceId);
+        return faction.getRelationTo(otherFaction).getColor();
+    }
 
     @Override
     public String getOwnerName(String factionId) {
         FPlayer owner = Factions.i.get(factionId).getFPlayerLeader();
         return owner == null ? null : owner.getName();
+    }
+
+    @Override
+    public String getAllianceOwnerName(String allianceId) {
+        return getOwnerName(allianceId);
     }
 
     @Override
@@ -116,6 +160,27 @@ public class Factions0108 extends FactionsHook {
         String factionId = event.getFaction().getId();
         String factionName = event.getFaction().getTag();
         callEvent(new FactionDisbandEvent(factionId, factionName));
+        callEvent(new AllianceDisbandEvent(factionId, factionName));
+        for (Faction f : Factions.i.get()) {
+            if (f != event.getFaction() && event.getFaction().getRelationTo(f) == Rel.ALLY) {
+                callEvent(new AllianceLeaveEvent(f.getId(), factionId));
+            }
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onRelationChange(FactionRelationEvent event) {
+        if (event.getRelation() == event.getOldRelation()) {
+            return;
+        }
+        
+        if (event.getRelation() == Rel.ALLY) {
+            callEvent(new AllianceJoinEvent(event.getFaction().getId(), event.getTargetFaction().getId()));
+            callEvent(new AllianceJoinEvent(event.getTargetFaction().getId(), event.getFaction().getId()));
+        } else if (event.getOldRelation() == Rel.ALLY) {
+            callEvent(new AllianceLeaveEvent(event.getFaction().getId(), event.getTargetFaction().getId()));
+            callEvent(new AllianceLeaveEvent(event.getTargetFaction().getId(), event.getFaction().getId()));
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -124,6 +189,7 @@ public class Factions0108 extends FactionsHook {
         String oldName = event.getFPlayer().getFaction().getTag();
         String newName = event.getFactionTag();
         callEvent(new FactionRenameEvent(factionId, oldName, newName));
+        callEvent(new AllianceRenameEvent(factionId, oldName, newName));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
