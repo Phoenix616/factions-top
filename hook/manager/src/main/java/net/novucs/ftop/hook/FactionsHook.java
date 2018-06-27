@@ -51,27 +51,31 @@ public abstract class FactionsHook implements Listener, PluginService {
     public abstract String getFactionName(String factionId);
 
     public abstract boolean isFaction(String factionId);
-    
+
     public abstract String getAlliance(String factionId);
-    
+
     public abstract String getAllianceName(String allianceId);
-    
+
     public abstract List<String> getAllianceMembers(String allianceId);
 
     public abstract ChatColor getRelation(Player player, String factionId);
 
     public abstract ChatColor getRelation(String factionId, String allianceId);
-    
+
     public abstract String getOwnerName(String factionId);
-    
+
     public abstract String getAllianceOwnerName(String allianceId);
-    
+
     public abstract List<UUID> getMembers(String factionId);
-    
+
     public abstract List<ChunkPos> getClaims();
-    
+
     public abstract Set<String> getFactionIds();
-    
+
+    public abstract String getEssentialsEconomyAccount(String factionId);
+
+    public abstract String getVaultEconomyAccount(String factionId);
+
     void callEvent(Event event) {
         if (plugin.getServer().isPrimaryThread()) {
             plugin.getServer().getPluginManager().callEvent(event);

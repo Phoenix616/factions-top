@@ -137,6 +137,16 @@ public class Factions0212 extends FactionsHook {
         return new HashSet<>(FactionColl.get().getIds());
     }
 
+    @Override
+    public String getEssentialsEconomyAccount(String factionId) {
+        return "faction_" + factionId.replace("-", "_");
+    }
+
+    @Override
+    public String getVaultEconomyAccount(String factionId) {
+        return "faction-" + factionId;
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDisband(EventFactionsDisband event) {
         String factionId = event.getFactionId();

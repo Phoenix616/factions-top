@@ -299,7 +299,7 @@ public final class FactionsTopPlugin extends JavaPlugin {
 
         Plugin vault = getServer().getPluginManager().getPlugin("Vault");
         if (vault != null) {
-            economyHook = new VaultEconomyHook(this, worthManager.getFactionIds());
+            economyHook = new VaultEconomyHook(this, factionsHook);
             getLogger().info("Vault found, using as economy backend.");
             return true;
         }
@@ -312,6 +312,13 @@ public final class FactionsTopPlugin extends JavaPlugin {
             factions = getServer().getPluginManager().getPlugin("LegacyFactions");
 
             if (factions == null) {
+                Plugin towny = getServer().getPluginManager().getPlugin("Towny");
+
+                if (towny != null) {
+                    factionsHook = new Towny089(this);
+                    return true;
+                }
+
                 return false;
             }
 

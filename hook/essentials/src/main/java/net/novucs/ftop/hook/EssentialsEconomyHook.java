@@ -17,11 +17,14 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class EssentialsEconomyHook implements EconomyHook, Listener {
 
     private final Plugin plugin;
     private final FactionsHook factionsHook;
+    private final Pattern economyAccountPattern;
     private boolean playerEnabled;
     private boolean factionEnabled;
     private IEssentials essentials = null;
@@ -29,6 +32,7 @@ public class EssentialsEconomyHook implements EconomyHook, Listener {
     public EssentialsEconomyHook(Plugin plugin, FactionsHook factionsHook) {
         this.plugin = plugin;
         this.factionsHook = factionsHook;
+        this.economyAccountPattern = Pattern.compile(Pattern.quote(factionsHook.getEssentialsEconomyAccount("thisisatestfaction")).replace("thisisatestfaction", "(.*)"));
     }
 
     @Override
@@ -88,7 +92,7 @@ public class EssentialsEconomyHook implements EconomyHook, Listener {
     @Override
     public double getFactionBalance(String factionId) {
         try {
-            return Economy.getMoneyExact("faction_" + factionId.replace("-", "_")).doubleValue();
+            return Economy.getMoneyExact(factionsHook.getEssentialsEconomyAccount(factionId)).doubleValue();
         } catch (UserDoesNotExistException e) {
             return 0;
         }
@@ -100,8 +104,9 @@ public class EssentialsEconomyHook implements EconomyHook, Listener {
         double newBalance = event.getNewBalance().doubleValue();
 
         Player player = event.getPlayer();
-        if (!player.isOnline() && player.getName().startsWith("faction_")) {
-            String factionId = player.getName().substring(8).replace("_", "-");
+        Matcher matcher = economyAccountPattern.matcher(player.getName());
+        if (!player.isOnline() && matcher.matches()) {
+            String factionId = matcher.group(1).replace("_", "-");
             if (factionsHook.isFaction(factionId)) {
                 if (factionEnabled) {
                     callEvent(new FactionEconomyEvent(factionId, oldBalance, newBalance));

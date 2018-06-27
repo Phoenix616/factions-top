@@ -16,7 +16,7 @@ import java.util.*;
 public class VaultEconomyHook extends BukkitRunnable implements EconomyHook, Listener {
 
     private final Plugin plugin;
-    private final Set<String> factionIds;
+    private final FactionsHook factionsHook;
     private final Map<UUID, Double> playerBalances = new HashMap<>();
     private final Map<String, Double> factionBalances = new HashMap<>();
     private boolean enabled;
@@ -25,9 +25,9 @@ public class VaultEconomyHook extends BukkitRunnable implements EconomyHook, Lis
     private int liquidUpdateTicks;
     private Economy economy;
 
-    public VaultEconomyHook(Plugin plugin, Set<String> factionIds) {
+    public VaultEconomyHook(Plugin plugin, FactionsHook factionsHook) {
         this.plugin = plugin;
-        this.factionIds = factionIds;
+        this.factionsHook = factionsHook;
     }
 
     public void setLiquidUpdateTicks(int liquidUpdateTicks) {
@@ -89,7 +89,7 @@ public class VaultEconomyHook extends BukkitRunnable implements EconomyHook, Lis
 
     @Override
     public double getFactionBalance(String factionId) {
-        return economy == null ? 0 : economy.getBalance(factionId);
+        return economy == null ? 0 : economy.getBalance(factionsHook.getVaultEconomyAccount(factionId));
     }
 
     @Override
@@ -136,10 +136,10 @@ public class VaultEconomyHook extends BukkitRunnable implements EconomyHook, Lis
         Double newBalance;
 
         // Iterate through every faction on the server.
-        for (String factionId : factionIds) {
+        for (String factionId : factionsHook.getFactionIds()) {
             // Get their previous and current balances.
             oldBalance = factionBalances.getOrDefault(factionId, 0d);
-            newBalance = economy.getBalance("faction-" + factionId);
+            newBalance = economy.getBalance(factionsHook.getVaultEconomyAccount(factionId));
 
             // Add new balance if faction is not already added to the cache.
             if (oldBalance == null) {

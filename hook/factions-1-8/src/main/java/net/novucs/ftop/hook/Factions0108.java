@@ -155,6 +155,16 @@ public class Factions0108 extends FactionsHook {
         return Factions.i.getMap().keySet();
     }
 
+    @Override
+    public String getEssentialsEconomyAccount(String factionId) {
+        return "faction_" + factionId.replace("-", "_");
+    }
+
+    @Override
+    public String getVaultEconomyAccount(String factionId) {
+        return "faction-" + factionId;
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDisband(com.massivecraft.factions.event.FactionDisbandEvent event) {
         String factionId = event.getFaction().getId();

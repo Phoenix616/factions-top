@@ -142,6 +142,12 @@
         </dependency>
         <dependency>
             <groupId>net.novucs.ftop.hook</groupId>
+            <artifactId>towny-0-89</artifactId>
+            <version>1.2.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.novucs.ftop.hook</groupId>
             <artifactId>mvdwplaceholderapi</artifactId>
             <version>1.2.1-SNAPSHOT</version>
             <scope>compile</scope>
