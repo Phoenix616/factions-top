@@ -98,7 +98,9 @@ public class SignManager extends BukkitRunnable implements PluginService, Listen
 
         String line = event.getLine(1);
         boolean isAlly = false;
-        if (line.toLowerCase().startsWith("ally ")) {
+        if (line.contains(" ")
+                && line.toLowerCase().startsWith("ally")
+                || line.toLowerCase().startsWith(plugin.getSettings().getAllianceTypeName().toLowerCase())) {
             isAlly = true;
             line = line.substring(line.indexOf(' '));
         }
@@ -109,12 +111,12 @@ public class SignManager extends BukkitRunnable implements PluginService, Listen
             rank = Integer.parseInt(line);
         } catch (NumberFormatException e) {
             event.getPlayer().sendMessage(ChatColor.RED + "Invalid rank number on line 2!");
-            event.setLine(0, ChatColor.DARK_RED + "[FactionsTop]");
+            event.setLine(0, ChatColor.DARK_RED + "[" + plugin.getSettings().getSignText() + "]");
             return;
         }
 
-        event.setLine(0, ChatColor.DARK_BLUE + "[FactionsTop]");
-        event.setLine(1, isAlly ? "Ally " : "" + "#" + Math.max(rank, 1));
+        event.setLine(0, ChatColor.DARK_BLUE + "[" + plugin.getSettings().getSignText() + "]");
+        event.setLine(1, isAlly ? plugin.getSettings().getAllianceTypeName() + " " : "" + "#" + Math.max(rank, 1));
 
         rank = Math.max(rank - 1, 0);
         SplaySet<Worth> worths = isAlly
