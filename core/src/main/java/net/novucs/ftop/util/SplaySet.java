@@ -184,6 +184,10 @@ public class SplaySet<E> extends AbstractSet<E> implements Set<E> {
     }
 
     private Node<E> nodeByIndex(int index) {
+        if (index == 0) {
+            return root;
+        }
+
         if (index < 0 || index >= size) {
             throw new IndexOutOfBoundsException("Size: " + size + "; Accessed: " + index);
         }
