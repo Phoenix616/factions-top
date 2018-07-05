@@ -38,6 +38,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -307,27 +308,33 @@ public final class FactionsTopPlugin extends JavaPlugin {
     }
 
     private boolean loadFactionsHook() {
-        Plugin factions = getServer().getPluginManager().getPlugin("Factions");
-        if (factions == null) {
-            factions = getServer().getPluginManager().getPlugin("LegacyFactions");
-
-            if (factions == null) {
-                Plugin towny = getServer().getPluginManager().getPlugin("Towny");
-
-                if (towny != null) {
-                    factionsHook = new Towny089(this);
-                    return true;
-                }
-
-                return false;
+        Plugin toHook = null;
+        for (String name : settings.getHookPriority()) {
+            toHook = getServer().getPluginManager().getPlugin(name);
+            if (toHook != null) {
+                break;
             }
+        }
 
-            factionsHook = new LegacyFactions0103(this);
-            return true;
+        if (toHook == null) {
+            return false;
+        }
+
+        switch (toHook.getName()) {
+            case "Factions":
+                break;
+            case "LegacyFactions":
+                factionsHook = new LegacyFactions0103(this);
+                return true;
+            case "Towny":
+                factionsHook = new Towny089(this);
+                return true;
+            default:
+                return false;
         }
 
         // Attempt to find a valid hook for the factions version.
-        String[] components = factions.getDescription().getVersion().split("\\.");
+        String[] components = toHook.getDescription().getVersion().split("\\.");
         String version = components.length < 2 ? "" : components[0] + "." + components[1];
 
         switch (version) {

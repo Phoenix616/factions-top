@@ -2,6 +2,7 @@ FactionsTop by Novucs.
 
 Configuration walkthrough:
 - config-version: Should not be touched, determines config version.
+- hook-priority: In which order other plugins should be tried to hook into
 - command-aliases: List of command to rebind to "/ftop".
 - gui-settings: All settings related to GUIs.
 - - line-count: Number of inventory lines.

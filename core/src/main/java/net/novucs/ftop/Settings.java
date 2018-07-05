@@ -148,6 +148,7 @@ public class Settings {
     private GuiLayout guiLayout;
 
     // General settings.
+    private List<String> hookPriority;
     private List<String> commandAliases;
     private List<String> ignoredFactionIds;
     private List<String> ignoredAllianceIds;
@@ -172,7 +173,7 @@ public class Settings {
     private Map<RecalculateReason, Boolean> bypassRecalculateDelay;
     private Map<EntityType, Double> spawnerPrices;
     private Map<Material, Double> blockPrices;
-    
+
     public Settings(FactionsTopPlugin plugin) {
         this.plugin = plugin;
     }
@@ -192,15 +193,15 @@ public class Settings {
     public ButtonMessage getBackButtonMessage() {
         return backButtonMessage;
     }
-    
+
     public ButtonMessage getNextButtonMessage() {
         return nextButtonMessage;
     }
-    
+
     public String getFactionTypeName() {
         return factionTypeName;
     }
-    
+
     public String getAllianceTypeName() {
         return allianceTypeName;
     }
@@ -261,6 +262,10 @@ public class Settings {
         return guiLayout;
     }
 
+    public List<String> getHookPriority() {
+        return hookPriority;
+    }
+
     public List<String> getCommandAliases() {
         return commandAliases;
     }
@@ -268,7 +273,7 @@ public class Settings {
     public List<String> getIgnoredFactionIds() {
         return ignoredFactionIds;
     }
-    
+
     public List<String> getIgnoredAllianceIds() {
         return ignoredAllianceIds;
     }
@@ -552,6 +557,7 @@ public class Settings {
         guiInventoryName = format(getString("gui-settings.inventory-name", "&lTop {type}s | Page {page:this}"));
         guiLayout = loadGuiLayout();
 
+        hookPriority = getList("settings.hook-priority", Arrays.asList("Factions", "LegacyFactions"), String.class);
         commandAliases = getList("settings.command-aliases", Collections.singletonList("f top"), String.class);
         ignoredFactionIds = getList("settings.ignored-faction-ids",
                 Arrays.asList("", "none", "safezone", "warzone", "0", "-1", "-2"), String.class);
