@@ -12,6 +12,7 @@ Configuration walkthrough:
 - disable-chest-events: Disables chest events, improves performance.
 - factions-per-page: Number of factions displayed per page in "/ftop".
 - sign-update-ticks: Duration in ticks between sign updates.
+- sign-pattern: The regex with which the plugin should check for sign creation.
 - liquid-update-ticks: Duration in ticks between liquid economy updates.
 - chunk-queue-size: Hard-limit maximum chunks to be queued for recalculation.
 - chunk-recalculate-millis: Duration in millis between chunk recalculations.
@@ -33,14 +34,14 @@ Configuration walkthrough:
 - block-prices: Value for specific blocks.
 
 Layout types:
-- button_back/button_next: When clicked, moves to relavent page.
+- button_back/button_next: When clicked, moves to relevant page.
 - - enabled/disabled: Button looks, enabled when the page is available.
 - - - text: Item name.
 - - - lore: Item lore.
 - - - material: Item material.
 - - - data: Item data.
-- faction_list: Adds a list of factions to the GUI.
-- - faction-count: Number of factions to add to the GUI.
+- worth_list: Adds a list of factions to the GUI.
+- - count: Number of factions to add to the GUI.
 - - fill-empty: Leaves the remainder slots blank when true.
 - - text: Item name.
 - - lore: Item lore.
@@ -93,9 +94,9 @@ MVdW Placeholders/Clip's PlaceholderAPI:
 - - The faction name of a rank by replacing * with a number.
 - - The faction name in last place by replacing * with "last".
 - {factionstop_rank:player}
-- - The rank of the players faction if valid, otherwise faction-not-found text.
+- - The rank of the player's faction if valid, otherwise faction-not-found text.
 - {factionstop_allyname:*}
 - - The alliance name of a rank by replacing * with a number.
 - - The alliance name in last place by replacing * with "last".
 - {factionstop_ally_rank:player}
-- - The rank of the players alliance if valid, otherwise faction-not-found text.
+- - The rank of the player's alliance if valid, otherwise faction-not-found text.

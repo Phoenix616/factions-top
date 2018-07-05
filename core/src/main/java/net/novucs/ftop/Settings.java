@@ -125,6 +125,7 @@ public class Settings {
     // Message settings.
     private DecimalFormat countFormat;
     private DecimalFormat currencyFormat;
+    private String signPattern;
     private String signText;
     private ButtonMessage backButtonMessage;
     private ButtonMessage nextButtonMessage;
@@ -184,6 +185,10 @@ public class Settings {
 
     public DecimalFormat getCurrencyFormat() {
         return currencyFormat;
+    }
+
+    public String getSignPattern() {
+        return signPattern;
     }
 
     public String getSignText() {
@@ -530,6 +535,7 @@ public class Settings {
         int version = getInt("config-version", 0);
         countFormat = new DecimalFormat(getString("messages.count-format", "#,###"));
         currencyFormat = new DecimalFormat(getString("messages.currency-format", "$#,###.##"));
+        signPattern = getString("messages.sign-pattern", "\\[f(|actions)top\\]");
         signText = format(getString("messages.sign-text", "FactionsTop"));
         backButtonMessage = getButtonMessage("messages.button-back",
                 new ButtonMessage("&b[<]", "&7[<]", Collections.singletonList("&dCommand: &b/f top {type} {page:back}")));

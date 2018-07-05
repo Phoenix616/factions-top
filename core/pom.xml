@@ -19,6 +19,10 @@
     <name>FactionsTop</name>
     <description>An efficient and comprehensive factions ranking system.</description>
 
+    <properties>
+        <package.path>net.novucs.ftop</package.path>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -35,16 +39,20 @@
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <relocations>
                                 <relocation>
+                                    <pattern>net.novucs.ftop</pattern>
+                                    <shadedPattern>${package.path}</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>com.zaxxer.hikari</pattern>
-                                    <shadedPattern>net.novucs.ftop.shade.com.zaxxer.hikari</shadedPattern>
+                                    <shadedPattern>${package.path}.shade.com.zaxxer.hikari</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>mkremins</pattern>
-                                    <shadedPattern>net.novucs.ftop.shade.mkremins</shadedPattern>
+                                    <shadedPattern>${package.path}.shade.mkremins</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>net.amoebaman</pattern>
-                                    <shadedPattern>net.novucs.ftop.shade.net.amoebaman</shadedPattern>
+                                    <shadedPattern>${package.path}.shade.net.amoebaman</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>

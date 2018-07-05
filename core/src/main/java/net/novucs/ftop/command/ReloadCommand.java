@@ -40,7 +40,7 @@ public class ReloadCommand implements CommandExecutor, PluginService {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!sender.hasPermission("factionstop.reload")) {
+        if (!sender.hasPermission(plugin.getName().toLowerCase() + ".reload")) {
             sender.sendMessage(plugin.getSettings().getPermissionMessage());
             return true;
         }

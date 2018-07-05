@@ -430,6 +430,10 @@ public final class FactionsTopPlugin extends JavaPlugin {
             getLogger().severe("Unable to load settings from config.yml");
             getLogger().severe("An I/O exception has occurred.");
             getLogger().log(Level.SEVERE, "The errors are as follows:", e);
+        } catch (Exception e) {
+            getLogger().severe("Unable to load settings from config.yml");
+            getLogger().severe("An " + e.getClass().getSimpleName() + " has occurred.");
+            getLogger().log(Level.SEVERE, "The errors are as follows:", e);
         }
 
         // Disable all services and update the plugin state.

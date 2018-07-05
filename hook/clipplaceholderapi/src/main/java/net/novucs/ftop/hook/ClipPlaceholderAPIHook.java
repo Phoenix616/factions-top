@@ -36,7 +36,7 @@ public class ClipPlaceholderAPIHook implements PlaceholderHook {
 
     @Override
     public boolean initialize(List<Integer> enabledRanks) {
-        return PlaceholderAPI.registerPlaceholderHook("factionstop", new me.clip.placeholderapi.PlaceholderHook() {
+        return PlaceholderAPI.registerPlaceholderHook(plugin.getName().toLowerCase(), new me.clip.placeholderapi.PlaceholderHook() {
             @Override
             public String onPlaceholderRequest(Player player, String identifier) {
                 if ("name:last".equals(identifier)) {

@@ -38,22 +38,22 @@ public class TextCommand implements CommandExecutor, PluginService {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!sender.hasPermission("factionstop.use")) {
+        if (!sender.hasPermission(plugin.getName().toLowerCase() + ".use")) {
             sender.sendMessage(plugin.getSettings().getPermissionMessage());
             return true;
         }
 
         if (args.length == 0) {
-            sendTop(sender, false, 0);
+            sendTop(sender, command.getName(), false, 0);
         } else {
             boolean showAlliances = args[0].toLowerCase().startsWith("ally")
                     || args[0].toLowerCase().startsWith(plugin.getSettings().getAllianceTypeName().toLowerCase());
-            sendTop(sender, showAlliances, NumberUtils.toInt(args[args.length - 1]));
+            sendTop(sender, command.getName(), showAlliances, NumberUtils.toInt(args[args.length - 1]));
         }
         return true;
     }
 
-    private void sendTop(CommandSender sender, boolean showAlliances, int page) {
+    private void sendTop(CommandSender sender, String command, boolean showAlliances, int page) {
         // Do not attempt to send hook worth if page requested is beyond the limit.
         int entries = plugin.getSettings().getFactionsPerPage();
         SplaySet<Worth> worthSet = showAlliances
@@ -78,11 +78,11 @@ public class TextCommand implements CommandExecutor, PluginService {
         ButtonMessage next = plugin.getSettings().getNextButtonMessage();
 
         String backMsg = page == 1 ? back.getDisabled() : back.getEnabled();
-        String backCmd = page == 1 ? null : "/ftop " + type + " " + (page - 1);
+        String backCmd = page == 1 ? null : "/" + command + " " + type + " " + (page - 1);
         List<String> backTooltip = replace(back.getTooltip(), placeholders);
 
         String nextMsg = page == maxPage ? next.getDisabled() : next.getEnabled();
-        String nextCmd = page == maxPage ? null : "/ftop " + type + " " + (page + 1);
+        String nextCmd = page == maxPage ? null : "/" + command + " " + type + " " + (page + 1);
         List<String> nextTooltip = replace(next.getTooltip(), placeholders);
 
         if (!plugin.getSettings().getHeaderMessage().isEmpty()) {

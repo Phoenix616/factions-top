@@ -26,7 +26,7 @@ public class RecalculateCommand implements CommandExecutor, PluginService {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!sender.hasPermission("factionstop.recalculate")) {
+        if (!sender.hasPermission(plugin.getName().toLowerCase() + ".recalculate")) {
             sender.sendMessage(plugin.getSettings().getPermissionMessage());
             return true;
         }

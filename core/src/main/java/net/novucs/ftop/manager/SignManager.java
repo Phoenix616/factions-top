@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 
 public class SignManager extends BukkitRunnable implements PluginService, Listener {
 
-    private static final Pattern signRegex = Pattern.compile("\\[f(|actions)top\\]");
+    private Pattern signRegex;
     private final FactionsTopPlugin plugin;
     private final Multimap<Integer, BlockPos> signs = HashMultimap.create();
     private final Map<Integer, Double> previous = new HashMap<>();
@@ -42,6 +42,7 @@ public class SignManager extends BukkitRunnable implements PluginService, Listen
 
     @Override
     public void initialize() {
+        signRegex = Pattern.compile(plugin.getSettings().getSignPattern());
         int ticks = plugin.getSettings().getSignUpdateTicks();
         runTaskTimer(plugin, ticks, ticks);
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
@@ -91,7 +92,8 @@ public class SignManager extends BukkitRunnable implements PluginService, Listen
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void registerSign(SignChangeEvent event) {
         // Do nothing if the sign should not be registered.
-        if (!event.getPlayer().hasPermission("factionstop.sign.create") ||
+        if (signRegex == null ||
+                !event.getPlayer().hasPermission(plugin.getName().toLowerCase() + ".sign.create") ||
                 !signRegex.matcher(event.getLine(0).toLowerCase()).find()) {
             return;
         }
@@ -153,7 +155,7 @@ public class SignManager extends BukkitRunnable implements PluginService, Listen
             return;
         }
 
-        if (!event.getPlayer().hasPermission("factionstop.sign.break")) {
+        if (!event.getPlayer().hasPermission(plugin.getName().toLowerCase() + ".sign.break")) {
             event.getPlayer().sendMessage(plugin.getSettings().getPermissionMessage());
             event.setCancelled(true);
             return;

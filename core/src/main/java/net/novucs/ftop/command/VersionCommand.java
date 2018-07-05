@@ -26,7 +26,8 @@ public class VersionCommand implements CommandExecutor, PluginService {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        sender.sendMessage(ChatColor.YELLOW + "FactionsTop version " + plugin.getDescription().getVersion() + " by Novucs.");
+        sender.sendMessage(ChatColor.YELLOW + plugin.getName() + " version " + plugin.getDescription().getVersion()
+                + " by " + String.join(", ", plugin.getDescription().getAuthors()) + ".");
         return true;
     }
 }
