@@ -39,7 +39,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class Factions0212 extends FactionsHook {
+public class Factions0212 extends FactionsPluginsHook {
 
     public Factions0212(Plugin plugin) {
         super(plugin);
@@ -64,16 +64,6 @@ public class Factions0212 extends FactionsHook {
     @Override
     public boolean isFaction(String factionId) {
         return FactionColl.get().get(factionId) != null;
-    }
-    
-    @Override
-    public String getAlliance(String factionId) {
-        return factionId;
-    }
-    
-    @Override
-    public String getAllianceName(String allianceId) {
-        return getFactionName(allianceId);
     }
     
     @Override
@@ -110,11 +100,6 @@ public class Factions0212 extends FactionsHook {
         MPlayer owner = FactionColl.get().get(factionId).getLeader();
         return owner == null ? null : owner.getName();
     }
-    
-    @Override
-    public String getAllianceOwnerName(String allianceId) {
-        return getOwnerName(allianceId);
-    }
 
     @Override
     public List<UUID> getMembers(String factionId) {
@@ -135,16 +120,6 @@ public class Factions0212 extends FactionsHook {
     @Override
     public Set<String> getFactionIds() {
         return new HashSet<>(FactionColl.get().getIds());
-    }
-
-    @Override
-    public String getEssentialsEconomyAccount(String factionId) {
-        return "faction_" + factionId.replace("-", "_");
-    }
-
-    @Override
-    public String getVaultEconomyAccount(String factionId) {
-        return "faction-" + factionId;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

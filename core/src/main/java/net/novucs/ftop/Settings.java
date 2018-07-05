@@ -30,14 +30,37 @@ public class Settings {
 
     private static final int LATEST_VERSION = 7;
 
-    private static final ImmutableList<String> WORTH_HOVER = ImmutableList.of(
+    private static final ImmutableList<String> FACTION_WORTH_HOVER = ImmutableList.of(
             "&e&l-- General --",
             "&dTotal Worth: &b{worth:total}",
             "&dBlock Worth: &b{worth:block}",
             "&dChest Worth: &b{worth:chest}",
             "&dSpawner Worth: &b{worth:spawner}",
             "&dPlayer Balances: &b{worth:player_balance}",
-            "&dFaction Bank: &b{worth:faction_balance}",
+            "&d{type:faction} Bank: &b{worth:faction_balance}",
+            "",
+            "&e&l-- Spawners --",
+            "&dSlime: &b{count:spawner:slime}",
+            "&dSkeleton: &b{count:spawner:skeleton}",
+            "&dZombie: &b{count:spawner:zombie}",
+            "",
+            "&e&l-- Materials --",
+            "&dEmerald Block: &b{count:material:emerald_block}",
+            "&dDiamond Block: &b{count:material:diamond_block}",
+            "&dGold Block: &b{count:material:gold_block}",
+            "&dIron Block: &b{count:material:iron_block}",
+            "&dCoal Block: &b{count:material:coal_block}"
+    );
+
+    private static final ImmutableList<String> ALLIANCE_WORTH_HOVER = ImmutableList.of(
+            "&e&l-- General --",
+            "&dTotal Worth: &b{worth:total}",
+            "&dBlock Worth: &b{worth:block}",
+            "&dChest Worth: &b{worth:chest}",
+            "&dSpawner Worth: &b{worth:spawner}",
+            "&dPlayer Balances: &b{worth:player_balance}",
+            "&d{type:faction}s Banks: &b{worth:faction_balance}",
+            "&d{type:alliance} Bank: &b{worth:alliance_balance}",
             "",
             "&e&l-- Spawners --",
             "&dSlime: &b{count:spawner:slime}",
@@ -67,13 +90,17 @@ public class Settings {
                             "material", "wool",
                             "data", 14
                     )),
-            ImmutableMap.of(
-                    "type", "worth_list",
-                    "count", 7,
-                    "fill-empty", true,
-                    "text", "&e{rank}. {relcolor}{name} &b{worth:total}",
-                    "lore", new ArrayList<>(WORTH_HOVER)
-            ),
+            ImmutableMap.builder()
+                    .putAll(ImmutableMap.of(
+                            "type", "worth_list",
+                            "count", 7,
+                            "fill-empty", true,
+                            "text", "&e{rank}. {relcolor}{name} &b{worth:total}"
+                    ))
+                    .putAll(ImmutableMap.of(
+                            "lore", new ArrayList<>(FACTION_WORTH_HOVER),
+                            "alliance-lore", new ArrayList<>(ALLIANCE_WORTH_HOVER)
+                    )).build(),
             ImmutableMap.of(
                     "type", "button_next",
                     "enabled", ImmutableMap.of(
@@ -107,6 +134,7 @@ public class Settings {
     private String noEntriesMessage;
     private String bodyMessage;
     private List<String> bodyTooltip;
+    private List<String> bodyAllianceTooltip;
     private String footerMessage;
     private String permissionMessage;
     private String recalculationStartMessage;
@@ -191,6 +219,10 @@ public class Settings {
 
     public List<String> getBodyTooltip() {
         return bodyTooltip;
+    }
+
+    public List<String> getBodyAllianceTooltip() {
+        return bodyAllianceTooltip;
     }
 
     public String getFooterMessage() {
@@ -503,8 +535,9 @@ public class Settings {
         headerMessage = format(getString("messages.header",
                 "&6_______.[ &2Top {type}s {button:back} &6{page:this}/{page:last} {button:next} &6]._______"));
         noEntriesMessage = format(getString("messages.no-entries", "&eNo entries to be displayed."));
-        bodyMessage = format(getString("messages.body.text", "&e{rank}. {relcolor}{faction} &b{worth:total}"));
-        bodyTooltip = format(getList("messages.body.tooltip", new ArrayList<>(WORTH_HOVER), String.class));
+        bodyMessage = format(getString("messages.body.text", "&e{rank}. {relcolor}{name} &b{worth:total}"));
+        bodyTooltip = format(getList("messages.body.tooltip", new ArrayList<>(FACTION_WORTH_HOVER), String.class));
+        bodyAllianceTooltip = format(getList("messages.body.alliance-tooltip", new ArrayList<>(ALLIANCE_WORTH_HOVER), String.class));
         footerMessage = format(getString("messages.footer", ""));
         permissionMessage = format(getString("messages.permission", "&cYou do not have permission."));
         recalculationStartMessage = format(getString("messages.recalculation-start",
@@ -521,8 +554,8 @@ public class Settings {
 
         commandAliases = getList("settings.command-aliases", Collections.singletonList("f top"), String.class);
         ignoredFactionIds = getList("settings.ignored-faction-ids",
-                Arrays.asList("none", "safezone", "warzone", "0", "-1", "-2"), String.class);
-        ignoredAllianceIds = getList("settings.ignored-alliance-ids", Arrays.asList("0", "-1", "-2"), String.class);
+                Arrays.asList("", "none", "safezone", "warzone", "0", "-1", "-2"), String.class);
+        ignoredAllianceIds = getList("settings.ignored-alliance-ids", Collections.singletonList(""), String.class);
         disableChestEvents = getBoolean("settings.disable-chest-events", false);
         factionsPerPage = getInt("settings.factions-per-page", 9);
         signUpdateTicks = getInt("settings.sign-update-ticks", 1);
@@ -554,6 +587,7 @@ public class Settings {
         enabled = parseStateMap(WorthType.class, "settings.enabled", false);
 
         if (plugin.getEconomyHook() != null) {
+            plugin.getEconomyHook().setAlliancesEnabled(isEnabled(WorthType.ALLIANCE_BALANCE));
             plugin.getEconomyHook().setFactionEnabled(isEnabled(WorthType.FACTION_BALANCE));
             plugin.getEconomyHook().setPlayerEnabled(isEnabled(WorthType.PLAYER_BALANCE));
         }

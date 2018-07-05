@@ -14,11 +14,11 @@ public abstract class Worth implements Comparable<Worth> {
     
     private String name;
     
-    private final Map<WorthType, Double> worth = new EnumMap<>(WorthType.class);
-    private final Map<Material, Integer> materials = new EnumMap<>(Material.class);
-    private final Map<EntityType, Integer> spawners = new EnumMap<>(EntityType.class);
-    private double totalWorth = 0;
-    private int totalSpawners = 0;
+    protected final Map<WorthType, Double> worth = new EnumMap<>(WorthType.class);
+    protected final Map<Material, Integer> materials = new EnumMap<>(Material.class);
+    protected final Map<EntityType, Integer> spawners = new EnumMap<>(EntityType.class);
+    protected double totalWorth = 0;
+    protected int totalSpawners = 0;
     
     public Worth(String id, String name) {
         this.id = id;
@@ -36,9 +36,7 @@ public abstract class Worth implements Comparable<Worth> {
     public String getId() {
         return id;
     }
-    
-    
-    
+
     public double getWorth(WorthType worthType) {
         return worth.getOrDefault(worthType, 0d);
     }
@@ -71,6 +69,14 @@ public abstract class Worth implements Comparable<Worth> {
     
     public void addWorth(WorthType worthType, double worth) {
         setWorth(worthType, getWorth(worthType) + worth);
+    }
+
+    protected void removeWorth(Map<WorthType, Double> worth) {
+        worth.values().forEach(amount -> totalWorth -= amount);
+        for (Map.Entry<WorthType, Double> entry : worth.entrySet()) {
+            double amount = Math.max(0D, this.worth.getOrDefault(entry.getKey(), 0D) - entry.getValue());
+            this.worth.put(entry.getKey(), amount);
+        }
     }
     
     public void addMaterials(Map<Material, Integer> materials) {

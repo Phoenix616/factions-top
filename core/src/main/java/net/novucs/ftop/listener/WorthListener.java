@@ -282,6 +282,11 @@ public class WorthListener extends BukkitRunnable implements Listener, PluginSer
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void updateWorth(AllianceEconomyEvent event) {
+        plugin.getWorthManager().addToAlliance(event.getAllianceId(), WorthType.ALLIANCE_BALANCE, event.getNewBalance() - event.getOldBalance());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void updateWorth(FactionEconomyEvent event) {
         plugin.getWorthManager().add(event.getFactionId(), WorthType.FACTION_BALANCE, event.getNewBalance() - event.getOldBalance());
     }

@@ -5,6 +5,7 @@ import com.earth2me.essentials.User;
 import com.earth2me.essentials.api.UserDoesNotExistException;
 import net.ess3.api.Economy;
 import net.ess3.api.events.UserBalanceUpdateEvent;
+import net.novucs.ftop.hook.event.AllianceEconomyEvent;
 import net.novucs.ftop.hook.event.FactionEconomyEvent;
 import net.novucs.ftop.hook.event.PlayerEconomyEvent;
 import org.bukkit.entity.Player;
@@ -25,14 +26,19 @@ public class EssentialsEconomyHook implements EconomyHook, Listener {
     private final Plugin plugin;
     private final FactionsHook factionsHook;
     private final Pattern economyAccountPattern;
+    private final Pattern allianceEconomyAccountPattern;
     private boolean playerEnabled;
     private boolean factionEnabled;
+    private boolean alliancesEnabled;
     private IEssentials essentials = null;
 
     public EssentialsEconomyHook(Plugin plugin, FactionsHook factionsHook) {
         this.plugin = plugin;
         this.factionsHook = factionsHook;
-        this.economyAccountPattern = Pattern.compile(Pattern.quote(factionsHook.getEssentialsEconomyAccount("thisisatestfaction")).replace("thisisatestfaction", "(.*)"));
+        this.economyAccountPattern = Pattern.compile(Pattern.quote(factionsHook.getEssentialsAccount("thisisatestfaction"))
+                .replace("-", "_").replace("thisisatestfaction", "\\E(.*)\\Q"));
+        this.allianceEconomyAccountPattern = Pattern.compile(Pattern.quote(factionsHook.getAllianceEssentialsAccount("thisisatestalliance"))
+                .replace("-", "_").replace("thisisatestalliance", "\\E(.*)\\Q"));
     }
 
     @Override
@@ -54,6 +60,11 @@ public class EssentialsEconomyHook implements EconomyHook, Listener {
     @Override
     public void setFactionEnabled(boolean enabled) {
         factionEnabled = enabled;
+    }
+
+    @Override
+    public void setAlliancesEnabled(boolean enabled) {
+        alliancesEnabled = enabled;
     }
 
     @Override
@@ -92,7 +103,16 @@ public class EssentialsEconomyHook implements EconomyHook, Listener {
     @Override
     public double getFactionBalance(String factionId) {
         try {
-            return Economy.getMoneyExact(factionsHook.getEssentialsEconomyAccount(factionId)).doubleValue();
+            return Economy.getMoneyExact(factionsHook.getEssentialsAccount(factionId)).doubleValue();
+        } catch (UserDoesNotExistException e) {
+            return 0;
+        }
+    }
+
+    @Override
+    public double getAllianceBalance(String allianceId) {
+        try {
+            return Economy.getMoneyExact(factionsHook.getAllianceEssentialsAccount(allianceId)).doubleValue();
         } catch (UserDoesNotExistException e) {
             return 0;
         }
@@ -104,14 +124,28 @@ public class EssentialsEconomyHook implements EconomyHook, Listener {
         double newBalance = event.getNewBalance().doubleValue();
 
         Player player = event.getPlayer();
-        Matcher matcher = economyAccountPattern.matcher(player.getName());
-        if (!player.isOnline() && matcher.matches()) {
-            String factionId = matcher.group(1).replace("_", "-");
-            if (factionsHook.isFaction(factionId)) {
-                if (factionEnabled) {
-                    callEvent(new FactionEconomyEvent(factionId, oldBalance, newBalance));
+
+        if (!player.isOnline()) {
+            Matcher matcher = economyAccountPattern.matcher(player.getName());
+            if (matcher.matches()) {
+                String factionId = matcher.group(1).replace("_", "-");
+                if (factionsHook.isFaction(factionId)) {
+                    if (factionEnabled) {
+                        callEvent(new FactionEconomyEvent(factionId, oldBalance, newBalance));
+                    }
+                    return;
                 }
-                return;
+            }
+
+            Matcher allianceMatcher = allianceEconomyAccountPattern.matcher(player.getName());
+            if (allianceMatcher.matches()) {
+                String allianceId = allianceMatcher.group(1).replace("_", "-");
+                if (factionsHook.getAllianceName(allianceId) != null) {
+                    if (alliancesEnabled) {
+                        callEvent(new AllianceEconomyEvent(allianceId, oldBalance, newBalance));
+                    }
+                    return;
+                }
             }
         }
 

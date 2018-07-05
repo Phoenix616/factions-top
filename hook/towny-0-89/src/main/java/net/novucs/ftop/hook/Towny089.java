@@ -2,6 +2,7 @@ package net.novucs.ftop.hook;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.palmergames.bukkit.towny.TownySettings;
 import com.palmergames.bukkit.towny.event.DeleteNationEvent;
 import com.palmergames.bukkit.towny.event.DeleteTownEvent;
 import com.palmergames.bukkit.towny.event.NationAddTownEvent;
@@ -21,6 +22,7 @@ import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.object.TownBlock;
 import com.palmergames.bukkit.towny.object.TownyUniverse;
 import com.palmergames.bukkit.towny.object.WorldCoord;
+import com.palmergames.util.StringMgmt;
 import net.novucs.ftop.entity.ChunkPos;
 import net.novucs.ftop.hook.event.AllianceDisbandEvent;
 import net.novucs.ftop.hook.event.AllianceJoinEvent;
@@ -48,6 +50,8 @@ import java.util.stream.Collectors;
 public class Towny089 extends FactionsHook {
 
     private final static int[][] CHUNK_MOD = {{0, 0}, {0, 1}, {1, 1}, {1, 0}};
+    private static final String TOWN_ECONOMY_PREFIX = TownySettings.getTownAccountPrefix();
+    private static final String NATION_ECONOMY_PREFIX = TownySettings.getNationAccountPrefix();
 
     private final Map<String, UUID> uuidCache = new HashMap<>();
     private final Set<ChunkPos> recentClaims = new HashSet<>(); // Chunks claimed in this tick
@@ -81,7 +85,7 @@ public class Towny089 extends FactionsHook {
                         .getTownBlock().getTown().getName();
             } catch (NotRegisteredException ignored) {} // no town
         }
-        return null;
+        return "none";
     }
 
     @Override
@@ -94,7 +98,7 @@ public class Towny089 extends FactionsHook {
         try {
             return TownyUniverse.getDataSource().getResident(player.getName()).getTown().getName();
         } catch (NotRegisteredException ignored) {} // not found
-        return null;
+        return "none";
     }
 
     @Override
@@ -198,20 +202,36 @@ public class Towny089 extends FactionsHook {
     }
 
     @Override
-    public String getEssentialsEconomyAccount(String factionId) {
+    public Set<String> getAllianceIds() {
+        return TownyUniverse.getDataSource().getNationsKeys();
+    }
+
+    @Override
+    public String getEssentialsAccount(String factionId) {
         return getEconomyAccount(factionId);
     }
 
     @Override
-    public String getVaultEconomyAccount(String factionId) {
+    public String getAllianceEssentialsAccount(String allianceId) {
+        return getNationEconomyAccount(allianceId);
+    }
+
+    @Override
+    public String getVaultAccount(String factionId) {
         return getEconomyAccount(factionId);
     }
 
+    @Override
+    public String getAllianceVaultAccount(String allianceId) {
+        return getNationEconomyAccount(allianceId);
+    }
+
     private String getEconomyAccount(String factionId) {
-        try {
-            return TownyUniverse.getDataSource().getTown(factionId).getEconomyName();
-        } catch (NotRegisteredException ignored) {} // not found
-        return null;
+        return StringMgmt.trimMaxLength(TOWN_ECONOMY_PREFIX + factionId, 32);
+    }
+
+    private String getNationEconomyAccount(String allianceId) {
+        return StringMgmt.trimMaxLength(NATION_ECONOMY_PREFIX + allianceId, 32);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

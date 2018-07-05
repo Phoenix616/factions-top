@@ -13,7 +13,6 @@ import net.novucs.ftop.hook.event.FactionDisbandEvent;
 import net.novucs.ftop.hook.event.FactionRenameEvent;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.plugin.Plugin;
@@ -22,7 +21,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Factions0106 extends FactionsHook {
+public class Factions0106 extends FactionsPluginsHook {
 
     private Map<FLocation, String> flocationIds;
     private Map<String, Faction> factions;
@@ -74,16 +73,6 @@ public class Factions0106 extends FactionsHook {
     }
     
     @Override
-    public String getAlliance(String factionId) {
-        return factionId;
-    }
-    
-    @Override
-    public String getAllianceName(String allianceId) {
-        return getFactionName(allianceId);
-    }
-    
-    @Override
     public List<String> getAllianceMembers(String allianceId) {
         Faction faction = Factions.getInstance().getFactionById(allianceId);
         List<String> allianceMembers = new ArrayList<>();
@@ -125,11 +114,6 @@ public class Factions0106 extends FactionsHook {
     }
 
     @Override
-    public String getAllianceOwnerName(String allianceId) {
-        return getOwnerName(allianceId);
-    }
-
-    @Override
     public List<UUID> getMembers(String factionId) {
         return Factions.getInstance().getFactionById(factionId).getFPlayers().stream()
                 .map(fplayer -> UUID.fromString(fplayer.getId()))
@@ -146,16 +130,6 @@ public class Factions0106 extends FactionsHook {
     @Override
     public Set<String> getFactionIds() {
         return factions.keySet();
-    }
-
-    @Override
-    public String getEssentialsEconomyAccount(String factionId) {
-        return "faction_" + factionId.replace("-", "_");
-    }
-
-    @Override
-    public String getVaultEconomyAccount(String factionId) {
-        return "faction-" + factionId;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

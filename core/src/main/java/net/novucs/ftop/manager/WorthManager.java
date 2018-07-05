@@ -68,10 +68,20 @@ public final class WorthManager implements PluginService {
      * Gets the worth for a particular faction ID.
      *
      * @param factionId the faction ID.
-     * @return the {@link FactionWorth} or null if no profile found.
+     * @return the {@link FactionWorth} or null if no worth found.
      */
     public FactionWorth getWorth(String factionId) {
-        return factions.get(factionId);
+        return factions.get(factionId.toLowerCase());
+    }
+
+    /**
+     * Gets the worth for a particular alliance ID.
+     *
+     * @param allianceId the alliance ID.
+     * @return the {@link AllianceWorth} or null if no worth found.
+     */
+    public AllianceWorth getAllianceWorth(String allianceId) {
+        return alliances.get(allianceId.toLowerCase());
     }
 
     @Override
@@ -95,24 +105,9 @@ public final class WorthManager implements PluginService {
         factions.clear();
 
         for (Map.Entry<ChunkPos, ChunkWorth> chunk : chunks.entrySet()) {
-            FactionWorth worth = getFactionWorth(chunk.getKey());
+            FactionWorth worth = getOrCreateFactionWorth(chunk.getKey());
             if (worth != null) {
                 worth.addAll(chunk.getValue());
-            }
-        }
-
-        if (plugin.getSettings().isEnabled(WorthType.PLAYER_BALANCE)) {
-            for (FactionWorth faction : factions.values()) {
-                List<UUID> members = plugin.getFactionsHook().getMembers(faction.getId());
-                double balance = plugin.getEconomyHook().getTotalBalance(members);
-                faction.addWorth(WorthType.PLAYER_BALANCE, balance);
-            }
-        }
-
-        if (plugin.getSettings().isEnabled(WorthType.FACTION_BALANCE)) {
-            for (FactionWorth faction : factions.values()) {
-                double balance = plugin.getEconomyHook().getFactionBalance(faction.getId());
-                faction.addWorth(WorthType.FACTION_BALANCE, balance);
             }
         }
 
@@ -122,13 +117,13 @@ public final class WorthManager implements PluginService {
             orderedFactions.add(worth);
             plugin.getPersistenceTask().queue(worth);
         }
-    
+
         alliances.clear();
-        
+
         for (FactionWorth faction : factions.values()) {
-            getAllianceWorth(faction.getAllianceId());
+            getOrCreateAllianceWorth(faction.getAllianceId());
         }
-        
+
         orderedAlliances.clear();
         orderedAlliances.addAll(alliances.values());
     }
@@ -155,8 +150,8 @@ public final class WorthManager implements PluginService {
      * @return the worth of a faction who has claimed this chunk, or null if no
      * valid faction owns this land.
      */
-    private FactionWorth getFactionWorth(ChunkPos pos) {
-        return getFactionWorth(plugin.getFactionsHook().getFactionAt(pos));
+    private FactionWorth getOrCreateFactionWorth(ChunkPos pos) {
+        return getOrCreateFactionWorth(plugin.getFactionsHook().getFactionAt(pos));
     }
 
     /**
@@ -165,18 +160,29 @@ public final class WorthManager implements PluginService {
      * @param factionId the faction ID.
      * @return the faction worth profile or null of not a valid faction.
      */
-    private FactionWorth getFactionWorth(String factionId) {
+    private FactionWorth getOrCreateFactionWorth(String factionId) {
         // No faction worth is associated with ignored faction IDs.
         if (plugin.getSettings().getIgnoredFactionIds().contains(factionId)) {
             return null;
         }
 
-        return factions.compute(factionId, (k, v) -> {
+        return factions.compute(factionId.toLowerCase(), (k, v) -> {
             if (v == null) {
                 v = new FactionWorth(k, plugin.getFactionsHook().getFactionName(k));
                 String allianceId = plugin.getFactionsHook().getAlliance(k);
                 if (allianceId != null) {
                     v.setAllianceId(allianceId);
+                }
+
+                if (plugin.getSettings().isEnabled(WorthType.PLAYER_BALANCE)) {
+                    List<UUID> members = plugin.getFactionsHook().getMembers(k);
+                    double balance = plugin.getEconomyHook().getTotalBalance(members);
+                    v.addWorth(WorthType.PLAYER_BALANCE, balance);
+                }
+
+                if (plugin.getSettings().isEnabled(WorthType.FACTION_BALANCE)) {
+                    double balance = plugin.getEconomyHook().getFactionBalance(k);
+                    v.addWorth(WorthType.FACTION_BALANCE, balance);
                 }
                 orderedFactions.add(v);
             }
@@ -190,27 +196,32 @@ public final class WorthManager implements PluginService {
      * @param allianceId the alliance ID.
      * @return the alliance worth profile or null of not a valid faction.
      */
-    public AllianceWorth getAllianceWorth(String allianceId) {
+    private AllianceWorth getOrCreateAllianceWorth(String allianceId) {
         if (allianceId == null) {
             return null;
         }
-        
+
         // No faction worth is associated with ignored faction IDs.
         if (plugin.getSettings().getIgnoredAllianceIds().contains(allianceId)) {
             return null;
         }
 
-        return alliances.compute(allianceId, (k, v) -> {
-            if (v == null) {
-                v = new AllianceWorth(k, plugin.getFactionsHook().getAllianceName(k));
+        return alliances.computeIfAbsent(allianceId.toLowerCase(), k -> {
+            String allianceName = plugin.getFactionsHook().getAllianceName(k);
+            if (allianceName != null) {
+                AllianceWorth v = new AllianceWorth(k, allianceName);
                 for (String factionsId : plugin.getFactionsHook().getAllianceMembers(k)) {
-                    FactionWorth f = getFactionWorth(factionsId);
+                    FactionWorth f = getOrCreateFactionWorth(factionsId);
                     if (f != null) {
                         v.addFaction(f);
                     }
                 }
+                if (plugin.getSettings().isEnabled(WorthType.ALLIANCE_BALANCE)) {
+                    v.addWorth(WorthType.ALLIANCE_BALANCE, plugin.getEconomyHook().getAllianceBalance(k));
+                }
+                return v;
             }
-            return v;
+            return null;
         });
     }
 
@@ -223,7 +234,7 @@ public final class WorthManager implements PluginService {
      */
     public void set(ChunkPos pos, WorthType worthType, double worth) {
         // Do nothing if faction worth is null.
-        FactionWorth factionWorth = getFactionWorth(pos);
+        FactionWorth factionWorth = getOrCreateFactionWorth(pos);
         if (factionWorth == null) return;
 
         orderedFactions.remove(factionWorth);
@@ -245,13 +256,13 @@ public final class WorthManager implements PluginService {
         }
 
         orderedFactions.add(factionWorth);
-    
+
         recalculateAlliancesWorth();
     }
 
     public void setMaterials(ChunkPos pos, Map<Material, Integer> materials) {
         // Do nothing if faction worth is null.
-        FactionWorth factionWorth = getFactionWorth(pos);
+        FactionWorth factionWorth = getOrCreateFactionWorth(pos);
         if (factionWorth == null) return;
 
         // Update all stats with the new chunk data.
@@ -274,7 +285,7 @@ public final class WorthManager implements PluginService {
 
     private void setSpawners(ChunkPos pos, Map<EntityType, Integer> spawners) {
         // Do nothing if faction worth is null.
-        FactionWorth factionWorth = getFactionWorth(pos);
+        FactionWorth factionWorth = getOrCreateFactionWorth(pos);
         if (factionWorth == null) return;
 
         // Update all stats with the new chunk data.
@@ -301,7 +312,7 @@ public final class WorthManager implements PluginService {
 
         // Do nothing if faction worth is null.
         ChunkPos pos = ChunkPos.of(chunk);
-        FactionWorth factionWorth = getFactionWorth(pos);
+        FactionWorth factionWorth = getOrCreateFactionWorth(pos);
         if (factionWorth == null) return;
 
         orderedFactions.remove(factionWorth);
@@ -317,7 +328,7 @@ public final class WorthManager implements PluginService {
         factionWorth.addSpawners(spawners);
 
         orderedFactions.add(factionWorth);
-        
+
         recalculateAlliancesWorth();
 
         // Add this worth to the recalculation queue if the chunk is being
@@ -335,7 +346,7 @@ public final class WorthManager implements PluginService {
         // Schedule chunk for recalculation.
         recalculate(chunkWorth, pos, chunk, reason);
     }
-    
+
     /**
      * Attempts to schedule a chunk for recalculation if the chunk is allowed
      * to be recalculated at this time.
@@ -345,7 +356,7 @@ public final class WorthManager implements PluginService {
      */
     public void recalculate(Chunk chunk, RecalculateReason reason) {
         ChunkPos pos = ChunkPos.of(chunk);
-        if (getFactionWorth(pos) == null) return;
+        if (getOrCreateFactionWorth(pos) == null) return;
 
         ChunkWorth chunkWorth = getChunkWorth(pos);
         recalculate(chunkWorth, pos, chunk, reason);
@@ -366,7 +377,7 @@ public final class WorthManager implements PluginService {
                 !plugin.getSettings().isBypassRecalculateDelay(reason) ||
                 !plugin.getSettings().isPerformRecalculate(reason) ||
                 plugin.getSettings().getChunkQueueSize() <= plugin.getChunkWorthTask().getQueueSize()) {
-            FactionWorth factionWorth = getFactionWorth(pos);
+            FactionWorth factionWorth = getOrCreateFactionWorth(pos);
             if (factionWorth != null) {
                 plugin.getPersistenceTask().queue(pos, chunkWorth);
                 plugin.getPersistenceTask().queue(factionWorth);
@@ -414,7 +425,7 @@ public final class WorthManager implements PluginService {
 
         plugin.getChunkWorthTask().queue(chunk.getChunkSnapshot());
     }
-    
+
     /**
      * Recalculate the worth of all alliances
      */
@@ -522,7 +533,7 @@ public final class WorthManager implements PluginService {
      */
     public void update(String factionId, Collection<ChunkPos> claims, boolean unclaimed) {
         // Do nothing if faction worth is null.
-        FactionWorth factionWorth = getFactionWorth(factionId);
+        FactionWorth factionWorth = getOrCreateFactionWorth(factionId);
         if (factionWorth == null) return;
 
         orderedFactions.remove(factionWorth);
@@ -551,7 +562,7 @@ public final class WorthManager implements PluginService {
         }
 
         orderedFactions.add(factionWorth);
-        
+
         recalculateAlliancesWorth();
     }
 
@@ -569,7 +580,7 @@ public final class WorthManager implements PluginService {
         }
 
         // Do nothing if faction worth is null.
-        FactionWorth factionWorth = getFactionWorth(factionId);
+        FactionWorth factionWorth = getOrCreateFactionWorth(factionId);
         if (factionWorth == null) return;
 
         // Update faction with the new worth and adjust the worth position.
@@ -577,8 +588,31 @@ public final class WorthManager implements PluginService {
         factionWorth.addWorth(worthType, worth);
         orderedFactions.add(factionWorth);
         plugin.getPersistenceTask().queue(factionWorth);
-        
+
         recalculateAlliancesWorth();
+    }
+
+    /**
+     * Adds to a n alliance worth.
+     *
+     * @param allianceId    the alliance ID.
+     * @param worthType     the worth type.
+     * @param worth         the worth to add.
+     */
+    public void addToAlliance(String allianceId, WorthType worthType, double worth) {
+        // Do nothing if the worth type is placed or disabled or worth is equal to nothing.
+        if (WorthType.isPlaced(worthType) || !plugin.getSettings().isEnabled(worthType) || worth == 0) {
+            return;
+        }
+
+        // Do nothing if faction worth is null.
+        AllianceWorth allianceWorth = getOrCreateAllianceWorth(allianceId);
+        if (allianceWorth == null) return;
+
+        // Update alliance with the new worth and adjust the worth position.
+        orderedAlliances.remove(allianceWorth);
+        allianceWorth.addWorth(worthType, worth);
+        orderedAlliances.add(allianceWorth);
     }
 
     /**
@@ -588,7 +622,7 @@ public final class WorthManager implements PluginService {
      * @param newName   the new faction name.
      */
     public void rename(String factionId, String newName) {
-        FactionWorth factionWorth = factions.getOrDefault(factionId, null);
+        FactionWorth factionWorth = getWorth(factionId);
 
         if (factionWorth != null) {
             factionWorth.setName(newName);
@@ -603,7 +637,7 @@ public final class WorthManager implements PluginService {
      * @param newName    the new faction name.
      */
     public void renameAlliance(String allianceId, String newName) {
-        AllianceWorth allianceWorth = alliances.getOrDefault(allianceId, null);
+        AllianceWorth allianceWorth = getAllianceWorth(allianceId);
 
         if (allianceWorth != null) {
             allianceWorth.setName(newName);
@@ -616,15 +650,10 @@ public final class WorthManager implements PluginService {
      * @param factionId the ID of the faction to remove.
      */
     public void remove(String factionId) {
-        FactionWorth factionWorth = factions.remove(factionId);
+        FactionWorth factionWorth = factions.remove(factionId.toLowerCase());
         orderedFactions.remove(factionWorth);
-        AllianceWorth allianceWorth = getAllianceWorth(factionWorth.getAllianceId());
-        if (allianceWorth != null) {
-            allianceWorth.removeFaction(factionWorth);
-        }
+        removeFromAlliances(factionWorth);
         plugin.getPersistenceTask().queueDeletedFaction(factionId);
-        
-        recalculateAlliancesWorth();
     }
 
     /**
@@ -633,38 +662,44 @@ public final class WorthManager implements PluginService {
      * @param allianceId the ID of the alliance to remove.
      */
     public void removeAlliance(String allianceId) {
-        AllianceWorth allianceWorth = alliances.remove(allianceId);
+        AllianceWorth allianceWorth = alliances.remove(allianceId.toLowerCase());
         orderedAlliances.remove(allianceWorth);
     }
-    
+
     /**
      * Add a faction into an alliance
      * @param allianceId the ID of the alliance to add to
      * @param factionId  the ID of the faction to add to the alliance
      */
     public void addToAlliance(String allianceId, String factionId) {
-        AllianceWorth allianceWorth = getAllianceWorth(allianceId);
+        AllianceWorth allianceWorth = getOrCreateAllianceWorth(allianceId);
         FactionWorth factionWorth = getWorth(factionId);
         if (factionWorth != null) {
             orderedAlliances.remove(allianceWorth);
             allianceWorth.addFaction(factionWorth);
-            allianceWorth.calculateWorth();
             orderedAlliances.add(allianceWorth);
         }
     }
-    
+
     /**
      * Remove a faction from an alliance
      * @param allianceId the ID of the alliance to remove from
      * @param factionId  the ID of the faction to remove from the alliance
      */
     public void removeFromAlliance(String allianceId, String factionId) {
-        AllianceWorth allianceWorth = getAllianceWorth(allianceId);
+        AllianceWorth allianceWorth = getOrCreateAllianceWorth(allianceId);
         FactionWorth factionWorth = getWorth(factionId);
         if (factionWorth != null) {
             orderedAlliances.remove(allianceWorth);
             allianceWorth.removeFaction(factionWorth);
-            allianceWorth.calculateWorth();
+            orderedAlliances.add(allianceWorth);
+        }
+    }
+
+    private void removeFromAlliances(FactionWorth factionWorth) {
+        for (AllianceWorth allianceWorth : alliances.values()) {
+            orderedAlliances.remove(allianceWorth);
+            allianceWorth.removeFaction(factionWorth);
             orderedAlliances.add(allianceWorth);
         }
     }

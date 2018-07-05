@@ -39,7 +39,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class LegacyFactions0103 extends FactionsHook {
+public class LegacyFactions0103 extends FactionsPluginsHook {
 
     private final Set<ChunkPos> recentlyClaimedChunks = new HashSet<>();
 
@@ -72,16 +72,6 @@ public class LegacyFactions0103 extends FactionsHook {
     @Override
     public boolean isFaction(String factionId) {
         return FactionColl.get().getFactionById(factionId) != null;
-    }
-    
-    @Override
-    public String getAlliance(String factionId) {
-        return factionId;
-    }
-    
-    @Override
-    public String getAllianceName(String allianceId) {
-        return getFactionName(allianceId);
     }
     
     @Override
@@ -124,11 +114,6 @@ public class LegacyFactions0103 extends FactionsHook {
         FPlayer owner = faction.getOwner();
         return owner == null ? null : owner.getName();
     }
-    
-    @Override
-    public String getAllianceOwnerName(String allianceId) {
-        return getOwnerName(allianceId);
-    }
 
     @Override
     public List<UUID> getMembers(String factionId) {
@@ -149,16 +134,6 @@ public class LegacyFactions0103 extends FactionsHook {
         return FactionColl.all().stream()
                 .map(Faction::getId)
                 .collect(Collectors.toSet());
-    }
-
-    @Override
-    public String getEssentialsEconomyAccount(String factionId) {
-        return "faction_" + factionId.replace("-", "_");
-    }
-
-    @Override
-    public String getVaultEconomyAccount(String factionId) {
-        return "faction-" + factionId;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

@@ -41,7 +41,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class Factions0108 extends FactionsHook {
+public class Factions0108 extends FactionsPluginsHook {
 
     private Map<FLocation, TerritoryAccess> flocationIds;
 
@@ -87,16 +87,6 @@ public class Factions0108 extends FactionsHook {
     }
     
     @Override
-    public String getAlliance(String factionId) {
-        return factionId;
-    }
-    
-    @Override
-    public String getAllianceName(String allianceId) {
-        return getFactionName(allianceId);
-    }
-    
-    @Override
     public List<String> getAllianceMembers(String allianceId) {
         Faction faction = Factions.i.get(allianceId);
         List<String> allianceMembers = new ArrayList<>();
@@ -132,11 +122,6 @@ public class Factions0108 extends FactionsHook {
     }
 
     @Override
-    public String getAllianceOwnerName(String allianceId) {
-        return getOwnerName(allianceId);
-    }
-
-    @Override
     public List<UUID> getMembers(String factionId) {
         return Factions.i.get(factionId).getFPlayers().stream()
                 .map(fplayer -> UUID.fromString(fplayer.getId()))
@@ -153,16 +138,6 @@ public class Factions0108 extends FactionsHook {
     @Override
     public Set<String> getFactionIds() {
         return Factions.i.getMap().keySet();
-    }
-
-    @Override
-    public String getEssentialsEconomyAccount(String factionId) {
-        return "faction_" + factionId.replace("-", "_");
-    }
-
-    @Override
-    public String getVaultEconomyAccount(String factionId) {
-        return "faction-" + factionId;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

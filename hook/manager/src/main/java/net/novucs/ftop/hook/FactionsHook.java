@@ -72,9 +72,15 @@ public abstract class FactionsHook implements Listener, PluginService {
 
     public abstract Set<String> getFactionIds();
 
-    public abstract String getEssentialsEconomyAccount(String factionId);
+    public abstract Set<String> getAllianceIds();
 
-    public abstract String getVaultEconomyAccount(String factionId);
+    public abstract String getEssentialsAccount(String factionId);
+
+    public abstract String getAllianceEssentialsAccount(String allianceId);
+
+    public abstract String getVaultAccount(String factionId);
+
+    public abstract String getAllianceVaultAccount(String allianceId);
 
     void callEvent(Event event) {
         if (plugin.getServer().isPrimaryThread()) {

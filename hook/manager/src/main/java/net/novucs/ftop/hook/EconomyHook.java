@@ -12,6 +12,8 @@ public interface EconomyHook extends PluginService {
 
     void setFactionEnabled(boolean enabled);
 
+    void setAlliancesEnabled(boolean enabled);
+
     double getBalance(Player player);
 
     double getBalance(UUID playerId);
@@ -20,4 +22,5 @@ public interface EconomyHook extends PluginService {
 
     double getFactionBalance(String factionId);
 
+    double getAllianceBalance(String allianceId);
 }

@@ -1,9 +1,11 @@
 package net.novucs.ftop.entity;
 
+import net.novucs.ftop.WorthType;
 import net.novucs.ftop.util.SplaySet;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 public class AllianceWorth extends Worth {
     
@@ -16,6 +18,16 @@ public class AllianceWorth extends Worth {
     
     public void calculateWorth() {
         orderedFactions.clear();
+        materials.clear();
+        spawners.clear();
+        totalSpawners = 0;
+        worth.replaceAll((t, a) -> {
+            if (t != WorthType.ALLIANCE_BALANCE) {
+                totalWorth -= a;
+                return 0D;
+            }
+            return a;
+        });
         for (FactionWorth factionWorth : factions.values()) {
             addMaterials(factionWorth.getMaterials());
             addSpawners(factionWorth.getSpawners());
@@ -25,12 +37,26 @@ public class AllianceWorth extends Worth {
     }
     
     public void addFaction(FactionWorth factionWorth) {
-        factions.put(factionWorth.getId(), factionWorth);
+        FactionWorth oldFaction = factions.get(factionWorth.getId().toLowerCase());
+        if (oldFaction != null) {
+            removeFaction(oldFaction);
+        }
         orderedFactions.remove(factionWorth);
+        factions.put(factionWorth.getId().toLowerCase(), factionWorth);
+        addMaterials(factionWorth.getMaterials());
+        addSpawners(factionWorth.getSpawners());
+        addWorth(factionWorth.getWorth());
         orderedFactions.add(factionWorth);
     }
     
     public void removeFaction(FactionWorth factionWorth) {
+        FactionWorth oldFaction = factions.get(factionWorth.getId().toLowerCase());
+        if (oldFaction != null) {
+            orderedFactions.remove(oldFaction);
+            removeMaterials(oldFaction.getMaterials());
+            removeSpawners(oldFaction.getSpawners());
+            removeWorth(oldFaction.getWorth());
+        }
         factions.remove(factionWorth.getId());
         orderedFactions.remove(factionWorth);
     }

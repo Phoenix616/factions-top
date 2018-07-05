@@ -1,6 +1,7 @@
 package net.novucs.ftop.hook;
 
 import net.milkbowl.vault.economy.Economy;
+import net.novucs.ftop.hook.event.AllianceEconomyEvent;
 import net.novucs.ftop.hook.event.FactionEconomyEvent;
 import net.novucs.ftop.hook.event.PlayerEconomyEvent;
 import org.bukkit.entity.Player;
@@ -19,9 +20,11 @@ public class VaultEconomyHook extends BukkitRunnable implements EconomyHook, Lis
     private final FactionsHook factionsHook;
     private final Map<UUID, Double> playerBalances = new HashMap<>();
     private final Map<String, Double> factionBalances = new HashMap<>();
+    private final Map<String, Double> allianceBalances = new HashMap<>();
     private boolean enabled;
     private boolean playerEnabled;
     private boolean factionEnabled;
+    private boolean alliancesEnabled;
     private int liquidUpdateTicks;
     private Economy economy;
 
@@ -69,6 +72,11 @@ public class VaultEconomyHook extends BukkitRunnable implements EconomyHook, Lis
     }
 
     @Override
+    public void setAlliancesEnabled(boolean enabled) {
+        alliancesEnabled = enabled;
+    }
+
+    @Override
     public double getBalance(Player player) {
         return economy == null ? 0 : economy.getBalance(player);
     }
@@ -89,7 +97,12 @@ public class VaultEconomyHook extends BukkitRunnable implements EconomyHook, Lis
 
     @Override
     public double getFactionBalance(String factionId) {
-        return economy == null ? 0 : economy.getBalance(factionsHook.getVaultEconomyAccount(factionId));
+        return economy == null ? 0 : economy.getBalance(factionsHook.getVaultAccount(factionId));
+    }
+
+    @Override
+    public double getAllianceBalance(String allianceId) {
+        return economy == null ? 0 : economy.getBalance(factionsHook.getAllianceVaultAccount(allianceId));
     }
 
     @Override
@@ -102,6 +115,11 @@ public class VaultEconomyHook extends BukkitRunnable implements EconomyHook, Lis
         // Tick factions if enabled.
         if (factionEnabled) {
             tickFactions();
+        }
+
+        // Tick factions if enabled.
+        if (alliancesEnabled) {
+            tickAlliances();
         }
     }
 
@@ -139,7 +157,7 @@ public class VaultEconomyHook extends BukkitRunnable implements EconomyHook, Lis
         for (String factionId : factionsHook.getFactionIds()) {
             // Get their previous and current balances.
             oldBalance = factionBalances.getOrDefault(factionId, 0d);
-            newBalance = economy.getBalance(factionsHook.getVaultEconomyAccount(factionId));
+            newBalance = economy.getBalance(factionsHook.getVaultAccount(factionId));
 
             // Add new balance if faction is not already added to the cache.
             if (oldBalance == null) {
@@ -151,6 +169,30 @@ public class VaultEconomyHook extends BukkitRunnable implements EconomyHook, Lis
             if (oldBalance.doubleValue() != newBalance.doubleValue()) {
                 factionBalances.put(factionId, newBalance);
                 callEvent(new FactionEconomyEvent(factionId, oldBalance, newBalance));
+            }
+        }
+    }
+
+    private void tickAlliances() {
+        Double oldBalance;
+        Double newBalance;
+
+        // Iterate through every faction on the server.
+        for (String allianceId : factionsHook.getAllianceIds()) {
+            // Get their previous and current balances.
+            oldBalance = allianceBalances.getOrDefault(allianceId, 0d);
+            newBalance = economy.getBalance(factionsHook.getAllianceVaultAccount(allianceId));
+
+            // Add new balance if faction is not already added to the cache.
+            if (oldBalance == null) {
+                allianceBalances.put(allianceId, newBalance);
+                continue;
+            }
+
+            // Call FactionEconomyEvent if their balance has changed.
+            if (oldBalance.doubleValue() != newBalance.doubleValue()) {
+                allianceBalances.put(allianceId, newBalance);
+                callEvent(new AllianceEconomyEvent(allianceId, oldBalance, newBalance));
             }
         }
     }

@@ -71,6 +71,8 @@ public class TextCommand implements CommandExecutor, PluginService {
         placeholders.put("{page:next}", String.valueOf(page + 1));
         placeholders.put("{page:last}", String.valueOf(maxPage));
         placeholders.put("{type}", type);
+        placeholders.put("{type:faction}", plugin.getSettings().getFactionTypeName());
+        placeholders.put("{type:alliance}", plugin.getSettings().getAllianceTypeName());
 
         ButtonMessage back = plugin.getSettings().getBackButtonMessage();
         ButtonMessage next = plugin.getSettings().getNextButtonMessage();
@@ -110,7 +112,10 @@ public class TextCommand implements CommandExecutor, PluginService {
             worthPlaceholders.put("{count:total:spawner}", plugin.getSettings().getCountFormat().format(worth.getTotalSpawnerCount()));
 
             String bodyMessage = insertPlaceholders(plugin.getSettings(), worth, replace(plugin.getSettings().getBodyMessage(), worthPlaceholders));
-            List<String> tooltip = insertPlaceholders(plugin.getSettings(), worth, replace(plugin.getSettings().getBodyTooltip(), worthPlaceholders));
+            List<String> tooltip = insertPlaceholders(plugin.getSettings(), worth, replace(showAlliances
+                            ? plugin.getSettings().getBodyAllianceTooltip()
+                            : plugin.getSettings().getBodyTooltip()
+                    , worthPlaceholders));
 
             FancyMessage message = new FancyMessage(bodyMessage).tooltip(tooltip);
             message.send(sender);

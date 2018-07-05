@@ -5,6 +5,7 @@ public enum WorthType {
     CHEST,
     PLAYER_BALANCE,
     FACTION_BALANCE,
+    ALLIANCE_BALANCE,
     SPAWNER,
     BLOCK;
 
@@ -18,6 +19,7 @@ public enum WorthType {
         switch (worthType) {
             case PLAYER_BALANCE:
             case FACTION_BALANCE:
+            case ALLIANCE_BALANCE:
                 return false;
         }
         return true;
