@@ -45,7 +45,7 @@ public class ReloadCommand implements CommandExecutor, PluginService {
             return true;
         }
 
-        plugin.loadSettings();
+        plugin.reload();
         MESSAGE.send(sender);
         return true;
     }

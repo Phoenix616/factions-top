@@ -124,6 +124,7 @@ public final class FactionsTopPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        boolean loaded = loadSettings();
         if (!loadFactionsHook()) {
             getLogger().severe("No valid version of factions was found!");
             getLogger().severe("Disabling FactionsTop . . .");
@@ -140,7 +141,9 @@ public final class FactionsTopPlugin extends JavaPlugin {
 
         setupSlf4j();
         services.add(factionsHook);
-        loadSettings();
+        if (loaded) {
+            loadServices();
+        }
         boolean newDatabase = loadDatabase();
         chunkWorthTask.start();
         persistenceTask.start();
@@ -403,13 +406,31 @@ public final class FactionsTopPlugin extends JavaPlugin {
      * the plugin will disable all services until the settings have been
      * corrected.
      */
-    public void loadSettings() {
+    private boolean loadSettings() {
         guiManager.closeInventories();
-
         try {
             // Attempt to load the plugin settings.
             settings.load();
+            return true;
+        } catch (InvalidConfigurationException e) {
+            getLogger().severe("Unable to load settings from config.yml");
+            getLogger().severe("The configuration you have provided has invalid syntax.");
+            getLogger().severe("Please correct your errors, then loadSettings the plugin.");
+            getLogger().log(Level.SEVERE, "The errors are as follows:", e);
+        } catch (IOException e) {
+            getLogger().severe("Unable to load settings from config.yml");
+            getLogger().severe("An I/O exception has occurred.");
+            getLogger().log(Level.SEVERE, "The errors are as follows:", e);
+        }
+        return false;
+    }
 
+    /**
+     * Loads all services. In the event of an error, the plugin will disable all services
+     * until the error/settings have been corrected.
+     */
+    private void loadServices() {
+        try {
             // Re-enable all plugin modules if currently inactive.
             if (!active) {
                 services.forEach(PluginService::initialize);
@@ -421,17 +442,9 @@ public final class FactionsTopPlugin extends JavaPlugin {
             // Load all placeholders.
             loadPlaceholderHook();
             return;
-        } catch (InvalidConfigurationException e) {
-            getLogger().severe("Unable to load settings from config.yml");
-            getLogger().severe("The configuration you have provided has invalid syntax.");
-            getLogger().severe("Please correct your errors, then loadSettings the plugin.");
-            getLogger().log(Level.SEVERE, "The errors are as follows:", e);
-        } catch (IOException e) {
-            getLogger().severe("Unable to load settings from config.yml");
-            getLogger().severe("An I/O exception has occurred.");
-            getLogger().log(Level.SEVERE, "The errors are as follows:", e);
+
         } catch (Exception e) {
-            getLogger().severe("Unable to load settings from config.yml");
+            getLogger().severe("Error while trying to initialize a service!");
             getLogger().severe("An " + e.getClass().getSimpleName() + " has occurred.");
             getLogger().log(Level.SEVERE, "The errors are as follows:", e);
         }
@@ -439,5 +452,18 @@ public final class FactionsTopPlugin extends JavaPlugin {
         // Disable all services and update the plugin state.
         services.forEach(PluginService::terminate);
         active = false;
+    }
+
+    /**
+     * Reload the plugin settings and services
+     */
+    public void reload() {
+        if (loadSettings()) {
+            loadServices();
+        } else {
+            // Disable all services and update the plugin state.
+            services.forEach(PluginService::terminate);
+            active = false;
+        }
     }
 }
