@@ -17,7 +17,7 @@ public class RecalculateCommand implements CommandExecutor, PluginService {
 
     @Override
     public void initialize() {
-        plugin.getCommand("ftoprecalculate").setExecutor(this);
+        plugin.getCommand("ttoprecalculate").setExecutor(this);
     }
 
     @Override

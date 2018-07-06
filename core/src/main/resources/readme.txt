@@ -1,32 +1,33 @@
-FactionsTop by Novucs.
+TownyTop by Novucs.
 
 Configuration walkthrough:
 - config-version: Should not be touched, determines config version.
 - hook-priority: In which order other plugins should be tried to hook into
-- command-aliases: List of command to rebind to "/ftop".
+- command-aliases: List of command to rebind to "/ttop".
 - gui-settings: All settings related to GUIs.
 - - line-count: Number of inventory lines.
 - - inventory-name: Name used in inventory header.
 - - layout: Fully configurable GUI layout.
-- ignored-faction-ids: Faction IDs to not calculate for factions top.
+- ignored-faction-ids: Town IDs to not calculate for factions top.
+- ignored-alliance-ids: Nation IDs to not calculate for nation top.
 - disable-chest-events: Disables chest events, improves performance.
-- factions-per-page: Number of factions displayed per page in "/ftop".
+- factions-per-page: Number of towns displayed per page in "/ttop".
 - sign-update-ticks: Duration in ticks between sign updates.
 - sign-pattern: The regex with which the plugin should check for sign creation.
 - liquid-update-ticks: Duration in ticks between liquid economy updates.
 - chunk-queue-size: Hard-limit maximum chunks to be queued for recalculation.
 - chunk-recalculate-millis: Duration in millis between chunk recalculations.
 - chat: Chat placeholder settings.
-- - enabled: Are FactionsTop placeholders going to be used?
+- - enabled: Are TownyTop placeholders going to be used?
 - - rank-placeholder: The text to replace in the original chat format.
 - - rank-found: How the placeholder should look when a rank is found.
 - - rank-not-found: How the placeholder should look when a rank is NOT found.
 - placeholders: MVdWPlaceholderAPI settings.
-- - faction-not-found: What to replace with when no faction is found.
+- - faction-not-found: What to replace with when no town is found.
 - - enabled-ranks: The ranks to be loaded into the MVdWPlaceholderAPI.
 - database: Various database settings, MySQL and H2 are supported.
 - - persist-interval: Millis between database updates.
-- - persist-factions: Saves factions in database for websites to parse.
+- - persist-factions: Saves towns in database for websites to parse.
 - enabled: Toggles whether specific worth types should be recalculated.
 - perform-recalculate: Toggles chunk recalculation for the listed reasons.
 - bypass-recalculate-delay: Toggles which reason bypasses the delay.
@@ -41,7 +42,7 @@ Layout types:
 - - - material: Item material.
 - - - data: Item data.
 - worth_list: Adds a list of factions to the GUI.
-- - count: Number of factions to add to the GUI.
+- - count: Number of towns/nations to add to the GUI.
 - - fill-empty: Leaves the remainder slots blank when true.
 - - text: Item name.
 - - lore: Item lore.
@@ -80,23 +81,23 @@ Header, footer and body:
 - {page:last} - Last page number.
 
 Body only:
-- {rank} - Faction/alliance rank.
-- {relcolor} - Relation color of the faction listed to the viewer.
-- {name} - Faction/alliance name.
-- {worth:total} - Total worth of faction listed.
+- {rank} - Town/nation rank.
+- {relcolor} - Relation color of the town listed to the viewer.
+- {name} - Town/nation name.
+- {worth:total} - Total worth of town/nation listed.
 - {count:total:spawner} - Total spawner count.
 - {worth:<worth type>} - Value of a specific worth type.
 - {count:spawner:<spawner>} - Count of a specific spawner type.
 - {count:material:<material>} - Count of a specific material.
 
 MVdW Placeholders/Clip's PlaceholderAPI:
-- {factionstop_name:*}
-- - The faction name of a rank by replacing * with a number.
-- - The faction name in last place by replacing * with "last".
-- {factionstop_rank:player}
-- - The rank of the player's faction if valid, otherwise faction-not-found text.
-- {factionstop_allyname:*}
-- - The alliance name of a rank by replacing * with a number.
-- - The alliance name in last place by replacing * with "last".
-- {factionstop_ally_rank:player}
-- - The rank of the player's alliance if valid, otherwise faction-not-found text.
+- {townytop_name:*}
+- - The town name of a rank by replacing * with a number.
+- - The town name in last place by replacing * with "last".
+- {townytop_rank:player}
+- - The rank of the player's town if valid, otherwise faction-not-found text.
+- {townytop_allyname:*}
+- - The nation name of a rank by replacing * with a number.
+- - The nation name in last place by replacing * with "last".
+- {townytop_ally_rank:player}
+- - The rank of the player's nation if valid, otherwise faction-not-found text.

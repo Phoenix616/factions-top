@@ -57,19 +57,19 @@ public class MVdWPlaceholderAPIHook implements PlaceholderHook {
         }
 
         LastReplacer allyLastReplacer = new LastReplacer(this.allyLastReplacer);
-        if (PlaceholderAPI.registerPlaceholder(plugin, prefix + "ally_name:last", allyLastReplacer)) {
+        if (PlaceholderAPI.registerPlaceholder(plugin, prefix + "nation_name:last", allyLastReplacer)) {
             updated = true;
         }
     
         for (int rank : enabledRanks) {
             RankReplacer replacer = new RankReplacer(allyRankReplacer, rank);
-            if (PlaceholderAPI.registerPlaceholder(plugin, prefix + "ally_name:" + rank, replacer)) {
+            if (PlaceholderAPI.registerPlaceholder(plugin, prefix + "nation_name:" + rank, replacer)) {
                 updated = true;
             }
         }
 
         PlayerReplacer allyPlayerReplacer = new PlayerReplacer(this.allyPlayerReplacer);
-        if (PlaceholderAPI.registerPlaceholder(plugin, prefix + "ally_rank:player", allyPlayerReplacer)) {
+        if (PlaceholderAPI.registerPlaceholder(plugin, prefix + "nation_rank:player", allyPlayerReplacer)) {
             updated = true;
         }
 

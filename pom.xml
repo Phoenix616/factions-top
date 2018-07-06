@@ -60,7 +60,6 @@
     <modules>
         <module>hook</module>
         <module>core</module>
-        <module>example</module>
     </modules>
 
     <repositories>

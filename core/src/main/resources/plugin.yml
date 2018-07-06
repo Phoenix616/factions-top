@@ -6,53 +6,53 @@ author: novucs
 softdepend: [EpicSpawners, Essentials, Factions, LegacyFactions, Towny, Vault, MVdWPlaceholderAPI, PlaceholderAPI]
 
 commands:
-  ftop:
-    aliases: [factionstop]
-    description: Displays factions in order of worth.
-    usage: /<command> [page]
+  ttop:
+    aliases: [townytop]
+    description: Displays towns and nations in order of worth.
+    usage: /<command> [nation] [<page>]
 
-  ftopgui:
-    aliases: [factionstopgui]
-    description: Displays top factions with a GUI.
-    usage: /<command> [page]
+  ttopgui:
+    aliases: [townytopgui]
+    description: Displays top towns and nations with a GUI.
+    usage: /<command> [nation] [<page>]
 
-  ftoprecalculate:
-    aliases: [factionstoprecalculate, ftoprecalc, ftoprec]
-    description: Recalculates all existing claims.
+  ttoprecalculate:
+    aliases: [townytoprecalculate, ttoprecalc, ttoprec]
+    description: Recalculates all existing towns.
     usage: /<command>
 
-  ftopreload:
-    aliases: [factionstopreload, ftopr]
+  ttopreload:
+    aliases: [townytopreload, ttopr]
     description: Reloads the plugin configuration.
     usage: /<command>
 
-  ftopversion:
-    aliases: [factionstopversion, ftopv]
+  ttopversion:
+    aliases: [townytopversion, ttopv]
     description: Sends the version message.
     usage: /<command>
 
 permissions:
-  factionstop.user:
+  townytop.user:
     default: true
     children:
-      factionstop.use: true
+      townytop.use: true
 
-  factionstop.admin:
+  townytop.admin:
     default: op
     children:
-      factionstop.recalculate: true
-      factionstop.reload: true
-      factionstop.sign.break: true
-      factionstop.sign.create: true
-      factionstop.user: true
+      townytop.recalculate: true
+      townytop.reload: true
+      townytop.sign.break: true
+      townytop.sign.create: true
+      townytop.user: true
 
-  factionstop.*:
+  townytop.*:
     default: false
     children:
-      factionstop.admin: true
+      townytop.admin: true
 
-  factionstop.use: {default: false}
-  factionstop.recalculate: {default: false}
-  factionstop.reload: {default: false}
-  factionstop.sign.break: {default: false}
-  factionstop.sign.create: {default: false}
+  townytop.use: {default: false}
+  townytop.recalculate: {default: false}
+  townytop.reload: {default: false}
+  townytop.sign.break: {default: false}
+  townytop.sign.create: {default: false}

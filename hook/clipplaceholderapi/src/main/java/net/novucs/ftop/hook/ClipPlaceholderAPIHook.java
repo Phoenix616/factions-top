@@ -41,11 +41,11 @@ public class ClipPlaceholderAPIHook implements PlaceholderHook {
             public String onPlaceholderRequest(Player player, String identifier) {
                 if ("name:last".equals(identifier)) {
                     return lastReplacer.get();
-                } else  if ("ally_name:last".equals(identifier)) {
+                } else  if ("nation_name:last".equals(identifier)) {
                     return allyLastReplacer.get();
                 } else if ("rank:player".equals(identifier)) {
                     return playerReplacer.apply(player);
-                } else if ("ally_rank:player".equals(identifier)) {
+                } else if ("nation_rank:player".equals(identifier)) {
                     return allyPlayerReplacer.apply(player);
                 } else if (identifier.startsWith("name:")) {
                     String[] split = identifier.split(":");
@@ -55,7 +55,7 @@ public class ClipPlaceholderAPIHook implements PlaceholderHook {
                             return rankReplacer.apply(rank);
                         } catch (NumberFormatException ignored) {}
                     }
-                } else if (identifier.startsWith("ally_name:")) {
+                } else if (identifier.startsWith("nation_name:")) {
                     String[] split = identifier.split(":");
                     if (split.length > 1) {
                         try {

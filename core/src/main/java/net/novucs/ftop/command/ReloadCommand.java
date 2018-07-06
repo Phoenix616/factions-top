@@ -21,7 +21,7 @@ public class ReloadCommand implements CommandExecutor, PluginService {
                     ChatColor.YELLOW + "to register. If you have modified any",
                     ChatColor.YELLOW + "worth values and wish to see immediate",
                     ChatColor.YELLOW + "changes, please type this:",
-                    ChatColor.LIGHT_PURPLE + "/ftoprec"
+                    ChatColor.LIGHT_PURPLE + "/ttoprec"
             ));
     private final FactionsTopPlugin plugin;
 
@@ -31,7 +31,7 @@ public class ReloadCommand implements CommandExecutor, PluginService {
 
     @Override
     public void initialize() {
-        plugin.getCommand("ftopreload").setExecutor(this);
+        plugin.getCommand("ttopreload").setExecutor(this);
     }
 
     @Override

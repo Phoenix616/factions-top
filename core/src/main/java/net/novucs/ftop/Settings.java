@@ -510,7 +510,7 @@ public class Settings {
         hikariConfig.setIdleTimeout(getLong("settings.database.idle-timeout", 5000));
         hikariConfig.setConnectionTimeout(getLong("settings.database.connection-timeout", 5000));
         hikariConfig.setThreadFactory(new ThreadFactoryBuilder().setDaemon(true)
-                .setNameFormat("factions-top-sql-pool-%d").build());
+                .setNameFormat("towny-top-sql-pool-%d").build());
         return hikariConfig;
     }
 
@@ -535,14 +535,14 @@ public class Settings {
         int version = getInt("config-version", 0);
         countFormat = new DecimalFormat(getString("messages.count-format", "#,###"));
         currencyFormat = new DecimalFormat(getString("messages.currency-format", "$#,###.##"));
-        signPattern = getString("messages.sign-pattern", "\\[f(|actions)top\\]");
-        signText = format(getString("messages.sign-text", "FactionsTop"));
+        signPattern = getString("messages.sign-pattern", "\\[t(|owny)top\\]");
+        signText = format(getString("messages.sign-text", "TownyTop"));
         backButtonMessage = getButtonMessage("messages.button-back",
-                new ButtonMessage("&b[<]", "&7[<]", Collections.singletonList("&dCommand: &b/f top {type} {page:back}")));
+                new ButtonMessage("&b[<]", "&7[<]", Collections.singletonList("&dCommand: &b/t top {type} {page:back}")));
         nextButtonMessage = getButtonMessage("messages.button-next",
-                new ButtonMessage("&b[>]", "&7[>]", Collections.singletonList("&dCommand: &b/f top {type} {page:next}")));
-        factionTypeName = format(getString("messages.type.faction", "Faction"));
-        allianceTypeName = format(getString("messages.type.alliance", "Alliance"));
+                new ButtonMessage("&b[>]", "&7[>]", Collections.singletonList("&dCommand: &b/t top {type} {page:next}")));
+        factionTypeName = format(getString("messages.type.faction", "Town"));
+        allianceTypeName = format(getString("messages.type.alliance", "Nation"));
         headerMessage = format(getString("messages.header",
                 "&6_______.[ &2Top {type}s {button:back} &6{page:this}/{page:last} {button:next} &6]._______"));
         noEntriesMessage = format(getString("messages.no-entries", "&eNo entries to be displayed."));
@@ -552,19 +552,19 @@ public class Settings {
         footerMessage = format(getString("messages.footer", ""));
         permissionMessage = format(getString("messages.permission", "&cYou do not have permission."));
         recalculationStartMessage = format(getString("messages.recalculation-start",
-                "&eAll faction totals are being resynchronized"));
+                "&eAll town totals are being resynchronized"));
         recalculationFinishMessage = format(getString("messages.recalculation-finish",
-                "&eResynchronization of faction totals complete"));
+                "&eResynchronization of town totals complete"));
         recalculationStopMessage = format(getString("messages.recalculation-stop",
-                "&eResynchronization of faction totals stopped"));
+                "&eResynchronization of town totals stopped"));
 
-        guiCommandAliases = getList("gui-settings.command-aliases", Collections.singletonList("f topgui"), String.class);
+        guiCommandAliases = getList("gui-settings.command-aliases", Collections.singletonList("t topgui"), String.class);
         guiLineCount = getInt("gui-settings.line-count", 1);
         guiInventoryName = format(getString("gui-settings.inventory-name", "&lTop {type}s | Page {page:this}"));
         guiLayout = loadGuiLayout();
 
-        hookPriority = getList("settings.hook-priority", Arrays.asList("Factions", "LegacyFactions"), String.class);
-        commandAliases = getList("settings.command-aliases", Collections.singletonList("f top"), String.class);
+        hookPriority = getList("settings.hook-priority", Collections.singletonList("Towny"), String.class);
+        commandAliases = getList("settings.command-aliases", Collections.singletonList("t top"), String.class);
         ignoredFactionIds = getList("settings.ignored-faction-ids",
                 Arrays.asList("", "none", "safezone", "warzone", "0", "-1", "-2"), String.class);
         ignoredAllianceIds = getList("settings.ignored-alliance-ids", Collections.singletonList(""), String.class);
@@ -580,7 +580,7 @@ public class Settings {
         chunkRecalculateMillis = getLong("settings.chunk-recalculate-millis", 120_000);
 
         chatEnabled = getBoolean("settings.chat.enabled", false);
-        chatRankPlaceholder = getString("settings.chat.rank-placeholder", "{factions_top_rank}");
+        chatRankPlaceholder = getString("settings.chat.rank-placeholder", "{towny_top_rank}");
         chatRankFound = format(getString("settings.chat.rank-found", "&2[&e#{rank}&2]" ));
         chatRankNotFound = format(getString("settings.chat.rank-not-found", ""));
 

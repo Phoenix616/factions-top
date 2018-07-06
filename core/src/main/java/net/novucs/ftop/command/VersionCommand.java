@@ -17,7 +17,7 @@ public class VersionCommand implements CommandExecutor, PluginService {
 
     @Override
     public void initialize() {
-        plugin.getCommand("ftopversion").setExecutor(this);
+        plugin.getCommand("ttopversion").setExecutor(this);
     }
 
     @Override

@@ -29,7 +29,7 @@ public class TextCommand implements CommandExecutor, PluginService {
 
     @Override
     public void initialize() {
-        plugin.getServer().getPluginCommand("ftop").setExecutor(this);
+        plugin.getServer().getPluginCommand("ttop").setExecutor(this);
     }
 
     @Override
