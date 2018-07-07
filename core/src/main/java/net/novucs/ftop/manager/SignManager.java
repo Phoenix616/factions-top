@@ -5,7 +5,6 @@ import com.google.common.collect.Multimap;
 import net.novucs.ftop.FactionsTopPlugin;
 import net.novucs.ftop.PluginService;
 import net.novucs.ftop.entity.BlockPos;
-import net.novucs.ftop.entity.FactionWorth;
 import net.novucs.ftop.entity.Worth;
 import net.novucs.ftop.util.SplaySet;
 import org.bukkit.ChatColor;
@@ -131,7 +130,7 @@ public class SignManager extends BukkitRunnable implements PluginService, Listen
             event.setLine(3, plugin.getSettings().getCurrencyFormat().format(worth.getTotalWorth()));
         } else {
             event.setLine(2, "-");
-            event.setLine(3, "$0.00");
+            event.setLine(3, plugin.getSettings().getCurrencyFormat().format(0d));
         }
 
         saveSign(BlockPos.of(event.getBlock()), rank);

@@ -151,8 +151,8 @@ public class Settings {
     // General settings.
     private List<String> hookPriority;
     private List<String> commandAliases;
-    private List<String> ignoredFactionIds;
-    private List<String> ignoredAllianceIds;
+    private Set<String> ignoredFactionIds;
+    private Set<String> ignoredAllianceIds;
     private boolean disableChestEvents;
     private int factionsPerPage;
     private int signUpdateTicks;
@@ -275,11 +275,11 @@ public class Settings {
         return commandAliases;
     }
 
-    public List<String> getIgnoredFactionIds() {
+    public Set<String> getIgnoredFactionIds() {
         return ignoredFactionIds;
     }
 
-    public List<String> getIgnoredAllianceIds() {
+    public Set<String> getIgnoredAllianceIds() {
         return ignoredAllianceIds;
     }
 
@@ -565,9 +565,10 @@ public class Settings {
 
         hookPriority = getList("settings.hook-priority", Arrays.asList("Factions", "LegacyFactions"), String.class);
         commandAliases = getList("settings.command-aliases", Collections.singletonList("f top"), String.class);
-        ignoredFactionIds = getList("settings.ignored-faction-ids",
-                Arrays.asList("", "none", "safezone", "warzone", "0", "-1", "-2"), String.class);
-        ignoredAllianceIds = getList("settings.ignored-alliance-ids", Collections.singletonList(""), String.class);
+        ignoredFactionIds = new HashSet<>(getList("settings.ignored-faction-ids",
+                Arrays.asList("", "none", "safezone", "warzone", "0", "-1", "-2"), String.class));
+        ignoredAllianceIds = new HashSet<>(getList("settings.ignored-alliance-ids",
+                Collections.singletonList(""), String.class));
         disableChestEvents = getBoolean("settings.disable-chest-events", false);
         factionsPerPage = getInt("settings.factions-per-page", 9);
         signUpdateTicks = getInt("settings.sign-update-ticks", 1);

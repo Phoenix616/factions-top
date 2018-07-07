@@ -135,12 +135,7 @@ public final class WorthManager implements PluginService {
      * @return the chunk profile.
      */
     private ChunkWorth getChunkWorth(ChunkPos pos) {
-        return chunks.compute(pos, (k, v) -> {
-            if (v == null) {
-                v = new ChunkWorth();
-            }
-            return v;
-        });
+        return chunks.computeIfAbsent(pos, k -> new ChunkWorth());
     }
 
     /**
@@ -166,26 +161,24 @@ public final class WorthManager implements PluginService {
             return null;
         }
 
-        return factions.compute(factionId.toLowerCase(), (k, v) -> {
-            if (v == null) {
-                v = new FactionWorth(k, plugin.getFactionsHook().getFactionName(k));
-                String allianceId = plugin.getFactionsHook().getAlliance(k);
-                if (allianceId != null) {
-                    v.setAllianceId(allianceId);
-                }
-
-                if (plugin.getSettings().isEnabled(WorthType.PLAYER_BALANCE)) {
-                    List<UUID> members = plugin.getFactionsHook().getMembers(k);
-                    double balance = plugin.getEconomyHook().getTotalBalance(members);
-                    v.addWorth(WorthType.PLAYER_BALANCE, balance);
-                }
-
-                if (plugin.getSettings().isEnabled(WorthType.FACTION_BALANCE)) {
-                    double balance = plugin.getEconomyHook().getFactionBalance(k);
-                    v.addWorth(WorthType.FACTION_BALANCE, balance);
-                }
-                orderedFactions.add(v);
+        return factions.computeIfAbsent(factionId.toLowerCase(), k -> {
+            FactionWorth v = new FactionWorth(k, plugin.getFactionsHook().getFactionName(k));
+            String allianceId = plugin.getFactionsHook().getAlliance(k);
+            if (allianceId != null) {
+                v.setAllianceId(allianceId);
             }
+
+            if (plugin.getSettings().isEnabled(WorthType.PLAYER_BALANCE)) {
+                List<UUID> members = plugin.getFactionsHook().getMembers(k);
+                double balance = plugin.getEconomyHook().getTotalBalance(members);
+                v.addWorth(WorthType.PLAYER_BALANCE, balance);
+            }
+
+            if (plugin.getSettings().isEnabled(WorthType.FACTION_BALANCE)) {
+                double balance = plugin.getEconomyHook().getFactionBalance(k);
+                v.addWorth(WorthType.FACTION_BALANCE, balance);
+            }
+            orderedFactions.add(v);
             return v;
         });
     }
