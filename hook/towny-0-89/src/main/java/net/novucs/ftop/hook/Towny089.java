@@ -20,6 +20,7 @@ import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.object.TownBlock;
+import com.palmergames.bukkit.towny.object.TownBlockOwner;
 import com.palmergames.bukkit.towny.object.TownyUniverse;
 import com.palmergames.bukkit.towny.object.WorldCoord;
 import com.palmergames.util.StringMgmt;
@@ -41,11 +42,14 @@ import org.bukkit.plugin.Plugin;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Towny089 extends FactionsHook {
 
@@ -192,8 +196,13 @@ public class Towny089 extends FactionsHook {
 
     @Override
     public List<ChunkPos> getClaims() {
-        return TownyUniverse.getDataSource().getAllTownBlocks()
-                .stream().map(this::getChunkPos).distinct().collect(Collectors.toList());
+        Set<ChunkPos> claims = new LinkedHashSet<>();
+        for (Town town : TownyUniverse.getDataSource().getTowns()) {
+            for (TownBlock block : town.getTownBlocks()) {
+                claims.add(getChunkPos(block));
+            }
+        }
+        return new ArrayList<>(claims);
     }
 
     @Override
