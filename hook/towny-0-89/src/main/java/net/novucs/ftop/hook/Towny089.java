@@ -20,7 +20,6 @@ import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.object.TownBlock;
-import com.palmergames.bukkit.towny.object.TownBlockOwner;
 import com.palmergames.bukkit.towny.object.TownyUniverse;
 import com.palmergames.bukkit.towny.object.WorldCoord;
 import com.palmergames.util.StringMgmt;
@@ -42,14 +41,11 @@ import org.bukkit.plugin.Plugin;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Towny089 extends FactionsHook {
 
@@ -82,13 +78,9 @@ public class Towny089 extends FactionsHook {
 
     @Override
     public String getFactionAt(String worldName, int chunkX, int chunkZ) {
-        // loop through all 4 corners of the chunk to check for a town
-        for (int[] mod : CHUNK_MOD) {
-            try {
-                return new WorldCoord(worldName, chunkX * 16 - 16 * mod[0], chunkZ * 16 - 16 * mod[1])
-                        .getTownBlock().getTown().getName();
-            } catch (NotRegisteredException ignored) {} // no town
-        }
+        try {
+            return new WorldCoord(worldName, chunkX, chunkZ).getTownBlock().getTown().getName();
+        } catch (NotRegisteredException ignored) {} // no town
         return "none";
     }
 
@@ -196,13 +188,14 @@ public class Towny089 extends FactionsHook {
 
     @Override
     public List<ChunkPos> getClaims() {
-        Set<ChunkPos> claims = new LinkedHashSet<>();
+        TownyUniverse.getDataSource().getAllTownBlocks();
+        List<ChunkPos> claims = new ArrayList<>();
         for (Town town : TownyUniverse.getDataSource().getTowns()) {
             for (TownBlock block : town.getTownBlocks()) {
                 claims.add(getChunkPos(block));
             }
         }
-        return new ArrayList<>(claims);
+        return claims;
     }
 
     @Override
@@ -348,10 +341,10 @@ public class Towny089 extends FactionsHook {
     }
 
     private ChunkPos getChunkPos(TownBlock block) {
-        return ChunkPos.of(block.getWorld().getName(), block.getX() >> 4, block.getZ() >> 4);
+        return ChunkPos.of(block.getWorld().getName(), block.getX(), block.getZ());
     }
 
     private ChunkPos getChunkPos(WorldCoord coord) {
-        return ChunkPos.of(coord.getWorldName(), coord.getX() >> 4, coord.getZ() >> 4);
+        return ChunkPos.of(coord.getWorldName(), coord.getX(), coord.getZ());
     }
 }

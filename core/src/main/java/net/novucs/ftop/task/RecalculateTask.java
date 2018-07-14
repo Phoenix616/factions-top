@@ -18,14 +18,13 @@ public class RecalculateTask implements PluginService, Runnable {
      */
     private final Stack<ChunkPos> toRecalculate = new Stack<>();
     /**
-     * How often in seconds it should print an information message.
-     * Automatically calculated from the size of chunks to not spam the console too much.
-     */
-    private int logInterval;
-    /**
      * When the task started
      */
     private long startTime;
+    /**
+     * Time when the lastlog message was send
+     */
+    private long lastLogMessage;
     /**
      * How much chunks we had at the start
      */
@@ -46,15 +45,8 @@ public class RecalculateTask implements PluginService, Runnable {
             toRecalculate.addAll(plugin.getFactionsHook().getClaims());
             startSize = toRecalculate.size();
             startTime = System.currentTimeMillis();
-            int expectedTime = startSize / plugin.getSettings().getRecalculateChunksPerTick() / 20 / 60;
-            if (expectedTime > 10) {
-                logInterval = 60 * 5;
-            } else if (expectedTime > 5) {
-                logInterval = 60;
-            } else {
-                logInterval = 30;
-            }
-            plugin.getLogger().log(Level.INFO, "Recalculating " + startSize + " chunks... Expected time: " + (expectedTime <= 1 ? "1 minute" : expectedTime + " minutes"));
+            lastLogMessage = System.currentTimeMillis();
+            plugin.getLogger().log(Level.INFO, "Recalculating " + startSize + " chunks...");
             taskId = plugin.getServer().getScheduler().runTaskTimer(plugin, this, 1, 1).getTaskId();
         } else {
             throw new IllegalStateException("Recalculation task is already running");
@@ -80,13 +72,14 @@ public class RecalculateTask implements PluginService, Runnable {
     public void run() {
         int counter = plugin.getSettings().getRecalculateChunksPerTick();
 
+        if (lastLogMessage + 60 * 1000 < System.currentTimeMillis()) {
+            lastLogMessage = System.currentTimeMillis();
+            plugin.getLogger().log(Level.INFO, (int) ((startSize - toRecalculate.size()) / (double) startSize * 100 * 100) / 100d + "% done. " + toRecalculate.size() + " chunks remaining...");
+        }
+
         while (isRunning()) {
             if (counter-- <= 0) {
                 break;
-            }
-
-            if (toRecalculate.size() % (plugin.getSettings().getRecalculateChunksPerTick() * 20 * logInterval) == 0) {
-                plugin.getLogger().log(Level.INFO, (toRecalculate.size() / (double) startSize) + "% done. " + toRecalculate.size() + " chunks remaining...");
             }
 
             ChunkPos pos = toRecalculate.pop();
