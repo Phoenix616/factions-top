@@ -2,6 +2,9 @@ package net.novucs.ftop.util;
 
 import org.bukkit.Material;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -62,6 +65,34 @@ public final class GenericUtils {
             return Optional.of(Enum.valueOf(type, name));
         } catch (IllegalArgumentException | NullPointerException e) {
             return Optional.empty();
+        }
+    }
+
+    public static <K> void addCountMap(Map<K, Integer> map, Map<K, Integer> toAdd) {
+        addCountMap(map, toAdd, true);
+    }
+
+    public static <K> void addCountMap(Map<K, Integer> map, Map<K, Integer> toAdd, boolean allowBelowZero) {
+        for (Map.Entry<K, Integer> entry : toAdd.entrySet()) {
+            int amount = map.getOrDefault(entry.getKey(), 0) + entry.getValue();
+            if (!allowBelowZero && amount < 0) {
+                amount = 0;
+            }
+            map.put(entry.getKey(), amount);
+        }
+    }
+
+    public static <K> void removeCountMap(Map<K, Integer> map, Map<K, Integer> toRemove) {
+        removeCountMap(map, toRemove, true);
+    }
+
+    public static <K> void removeCountMap(Map<K, Integer> map, Map<K, Integer> toRemove, boolean allowBelowZero) {
+        for (Map.Entry<K, Integer> entry : toRemove.entrySet()) {
+            int amount = map.getOrDefault(entry.getKey(), 0) - entry.getValue();
+            if (!allowBelowZero && amount < 0) {
+                amount = 0;
+            }
+            map.put(entry.getKey(), amount);
         }
     }
 }

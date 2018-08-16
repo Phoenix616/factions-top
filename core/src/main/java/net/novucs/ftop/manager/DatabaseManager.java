@@ -108,6 +108,23 @@ public class DatabaseManager {
                 "UNIQUE (`chunk_id`, `spawner_id`))");
         statement.executeUpdate();
 
+        statement = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `special` (" +
+                "`id` INT NOT NULL AUTO_INCREMENT," +
+                "`name` VARCHAR(128) NOT NULL UNIQUE," +
+                "PRIMARY KEY (`id`))");
+        statement.executeUpdate();
+
+        statement = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `chunk_special_count` (" +
+                "`id` INT NOT NULL AUTO_INCREMENT," +
+                "`chunk_id` INT NOT NULL," +
+                "`special_id` INT NOT NULL," +
+                "`count` INT NOT NULL," +
+                "PRIMARY KEY (`id`)," +
+                "FOREIGN KEY (`chunk_id`) REFERENCES chunk(`id`)," +
+                "FOREIGN KEY (`special_id`) REFERENCES special(`id`)," +
+                "UNIQUE (`chunk_id`, `special_id`))");
+        statement.executeUpdate();
+
         statement = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `block` (" +
                 "`id` INT NOT NULL AUTO_INCREMENT, " +
                 "`world_id` INT NOT NULL, " +
@@ -178,6 +195,17 @@ public class DatabaseManager {
                 "FOREIGN KEY (`faction_id`) REFERENCES faction(`id`), " +
                 "FOREIGN KEY (`spawner_id`) REFERENCES spawner(`id`), " +
                 "UNIQUE (`faction_id`, `spawner_id`))");
+        statement.executeUpdate();
+
+        statement = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `faction_special_count` (" +
+                "`id` INT NOT NULL AUTO_INCREMENT, " +
+                "`faction_id` VARCHAR(40) NOT NULL, " +
+                "`special_id` INT NOT NULL, " +
+                "`count` INT NOT NULL, " +
+                "PRIMARY KEY (`id`), " +
+                "FOREIGN KEY (`faction_id`) REFERENCES faction(`id`), " +
+                "FOREIGN KEY (`special_id`) REFERENCES special(`id`), " +
+                "UNIQUE (`faction_id`, `special_id`))");
         statement.executeUpdate();
     }
 

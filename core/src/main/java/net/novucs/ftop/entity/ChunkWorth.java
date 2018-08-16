@@ -1,10 +1,12 @@
 package net.novucs.ftop.entity;
 
 import net.novucs.ftop.WorthType;
+import net.novucs.ftop.util.GenericUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 
 public class ChunkWorth {
@@ -12,16 +14,18 @@ public class ChunkWorth {
     private final Map<WorthType, Double> worth;
     private Map<Material, Integer> materials;
     private Map<EntityType, Integer> spawners;
+    private Map<String, Integer> specials;
     private long nextRecalculation;
 
     public ChunkWorth() {
-        this(new EnumMap<>(WorthType.class), new EnumMap<>(Material.class), new EnumMap<>(EntityType.class));
+        this(new EnumMap<>(WorthType.class), new EnumMap<>(Material.class), new EnumMap<>(EntityType.class), new HashMap<>());
     }
 
-    public ChunkWorth(Map<WorthType, Double> worth, Map<Material, Integer> materials, Map<EntityType, Integer> spawners) {
+    public ChunkWorth(Map<WorthType, Double> worth, Map<Material, Integer> materials, Map<EntityType, Integer> spawners, Map<String, Integer> specials) {
         this.worth = worth;
         this.materials = materials;
         this.spawners = spawners;
+        this.specials = specials;
     }
 
     public double getWorth(WorthType worthType) {
@@ -49,6 +53,10 @@ public class ChunkWorth {
         return spawners;
     }
 
+    public Map<String, Integer> getSpecials() {
+        return specials;
+    }
+
     public void setMaterials(Map<Material, Integer> materials) {
         this.materials = materials;
     }
@@ -57,18 +65,20 @@ public class ChunkWorth {
         this.spawners = spawners;
     }
 
+    public void setSpecials(Map<String, Integer> specials) {
+        this.specials = specials;
+    }
+
     public void addMaterials(Map<Material, Integer> materials) {
-        for (Map.Entry<Material, Integer> material : materials.entrySet()) {
-            int amount = Math.max(0, this.materials.getOrDefault(material.getKey(), 0) + material.getValue());
-            this.materials.put(material.getKey(), amount);
-        }
+        GenericUtils.addCountMap(this.materials, materials, false);
     }
 
     public void addSpawners(Map<EntityType, Integer> spawners) {
-        for (Map.Entry<EntityType, Integer> spawner : spawners.entrySet()) {
-            int amount = Math.max(0, this.spawners.getOrDefault(spawner.getKey(), 0) + spawner.getValue());
-            this.spawners.put(spawner.getKey(), amount);
-        }
+        GenericUtils.addCountMap(this.spawners, spawners, false);
+    }
+
+    public void addSpecials(Map<String, Integer> specials) {
+        GenericUtils.addCountMap(this.specials, specials, false);
     }
 
     public void addWorth(WorthType worthType, double worth) {
@@ -89,6 +99,7 @@ public class ChunkWorth {
                 "worth=" + worth +
                 ", materials=" + materials +
                 ", spawners=" + spawners +
+                ", specials=" + specials +
                 ", nextRecalculation=" + nextRecalculation +
                 '}';
     }

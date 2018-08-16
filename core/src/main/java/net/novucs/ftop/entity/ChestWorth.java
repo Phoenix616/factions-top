@@ -11,11 +11,13 @@ public class ChestWorth {
     private final double totalWorth;
     private final Map<Material, Integer> materials;
     private final Map<EntityType, Integer> spawners;
+    private final Map<String, Integer> specials;
 
-    public ChestWorth(double totalWorth, Map<Material, Integer> materials, Map<EntityType, Integer> spawners) {
+    public ChestWorth(double totalWorth, Map<Material, Integer> materials, Map<EntityType, Integer> spawners, Map<String, Integer> specials) {
         this.totalWorth = totalWorth;
         this.materials = materials;
         this.spawners = spawners;
+        this.specials = specials;
     }
 
     public double getTotalWorth() {
@@ -28,6 +30,10 @@ public class ChestWorth {
 
     public Map<EntityType, Integer> getSpawners() {
         return spawners;
+    }
+
+    public Map<String, Integer> getSpecials() {
+        return specials;
     }
 
     @Override
@@ -51,6 +57,7 @@ public class ChestWorth {
                 "totalWorth=" + totalWorth +
                 ", materials=" + materials +
                 ", spawners=" + spawners +
+                ", specials=" + specials +
                 '}';
     }
 }

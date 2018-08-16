@@ -1,11 +1,13 @@
 package net.novucs.ftop.entity;
 
 import net.novucs.ftop.WorthType;
+import net.novucs.ftop.util.GenericUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 
 public abstract class Worth implements Comparable<Worth> {
@@ -17,6 +19,7 @@ public abstract class Worth implements Comparable<Worth> {
     protected final Map<WorthType, Double> worth = new EnumMap<>(WorthType.class);
     protected final Map<Material, Integer> materials = new EnumMap<>(Material.class);
     protected final Map<EntityType, Integer> spawners = new EnumMap<>(EntityType.class);
+    protected final Map<String, Integer> specials = new HashMap<>();
     protected double totalWorth = 0;
     protected int totalSpawners = 0;
     
@@ -52,6 +55,10 @@ public abstract class Worth implements Comparable<Worth> {
     public Map<EntityType, Integer> getSpawners() {
         return Collections.unmodifiableMap(spawners);
     }
+
+    public Map<String, Integer> getSpecials() {
+        return Collections.unmodifiableMap(specials);
+    }
     
     public int getTotalSpawnerCount() {
         return totalSpawners;
@@ -80,21 +87,29 @@ public abstract class Worth implements Comparable<Worth> {
     }
     
     public void addMaterials(Map<Material, Integer> materials) {
-        add(materials, this.materials);
+        GenericUtils.addCountMap(this.materials, materials, false);
     }
     
     public void removeMaterials(Map<Material, Integer> materials) {
-        remove(materials, this.materials);
+        GenericUtils.removeCountMap(this.materials, materials, false);
     }
     
     public void addSpawners(Map<EntityType, Integer> spawners) {
         spawners.values().forEach(count -> totalSpawners += count);
-        add(spawners, this.spawners);
+        GenericUtils.addCountMap(this.spawners, spawners, false);
     }
     
     public void removeSpawners(Map<EntityType, Integer> spawners) {
         spawners.values().forEach(count -> totalSpawners -= count);
-        remove(spawners, this.spawners);
+        GenericUtils.removeCountMap(this.spawners, spawners, false);
+    }
+
+    public void addSpecials(Map<String, Integer> specials) {
+        GenericUtils.addCountMap(this.specials, specials, false);
+    }
+
+    public void removeSpecials(Map<String, Integer> specials) {
+        GenericUtils.removeCountMap(this.specials, specials, false);
     }
     
     protected void addWorth(Map<WorthType, Double> worth) {
@@ -102,20 +117,6 @@ public abstract class Worth implements Comparable<Worth> {
             double amount = this.worth.getOrDefault(entry.getKey(), 0d);
             totalWorth += entry.getValue();
             this.worth.put(entry.getKey(), amount + entry.getValue());
-        }
-    }
-    
-    private <T> void add(Map<T, Integer> modifier, Map<T, Integer> modified) {
-        for (Map.Entry<T, Integer> entry : modifier.entrySet()) {
-            int amount = Math.max(0, modified.getOrDefault(entry.getKey(), 0) + entry.getValue());
-            modified.put(entry.getKey(), amount);
-        }
-    }
-    
-    private <T> void remove(Map<T, Integer> modifier, Map<T, Integer> modified) {
-        for (Map.Entry<T, Integer> entry : modifier.entrySet()) {
-            int amount = Math.max(0, modified.getOrDefault(entry.getKey(), 0) - entry.getValue());
-            modified.put(entry.getKey(), amount);
         }
     }
     
@@ -131,6 +132,7 @@ public abstract class Worth implements Comparable<Worth> {
                 ", worth=" + getWorth() +
                 ", materials=" + getMaterials() +
                 ", spawners=" + getSpawners() +
+                ", specials=" + getSpecials() +
                 ", name='" + getName() + '\'' +
                 ", totalWorth=" + getTotalWorth() +
                 '}';

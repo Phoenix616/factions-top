@@ -34,6 +34,7 @@ public class FactionWorth extends Worth {
     public void addAll(ChunkWorth chunkWorth) {
         addMaterials(chunkWorth.getMaterials());
         addSpawners(chunkWorth.getSpawners());
+        addSpecials(chunkWorth.getSpecials());
         addWorth(chunkWorth.getWorth());
     }
 
@@ -43,8 +44,9 @@ public class FactionWorth extends Worth {
                 "factionId='" + getId() + '\'' +
                 ", allianceId='" + getAllianceId() + '\'' +
                 ", worth=" + getWorth() +
-                ", materials=" + getMaterials() +
-                ", spawners=" + getSpawners() +
+                ", materials=" + materials +
+                ", spawners=" + spawners +
+                ", specials=" + specials +
                 ", name='" + getName() + '\'' +
                 ", totalWorth=" + getTotalWorth() +
                 '}';

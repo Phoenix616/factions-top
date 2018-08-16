@@ -66,20 +66,24 @@ public class FactionModel {
     private void persistNames(Set<FactionWorth> factions) throws SQLException {
         MaterialModel materialModel = MaterialModel.of(connection, identityCache);
         SpawnerModel spawnerModel = SpawnerModel.of(connection, identityCache);
+        SpecialModel specialModel = SpecialModel.of(connection, identityCache);
         WorthModel worthModel = WorthModel.of(connection, identityCache);
 
         for (FactionWorth worth : factions) {
             materialModel.addBatch(worth.getMaterials().keySet());
             spawnerModel.addBatch(worth.getSpawners().keySet());
+            specialModel.addBatch(worth.getSpecials().keySet());
             worthModel.addBatch(worth.getWorth().keySet());
         }
 
         materialModel.executeBatch();
         spawnerModel.executeBatch();
+        specialModel.executeBatch();
         worthModel.executeBatch();
 
         materialModel.close();
         spawnerModel.close();
+        specialModel.close();
         worthModel.close();
     }
 
@@ -140,24 +144,29 @@ public class FactionModel {
     private void persistStatistics(Set<FactionWorth> factions, Set<String> deletedFactions) throws SQLException {
         FactionMaterialModel materialModel = FactionMaterialModel.of(connection, identityCache);
         FactionSpawnerModel spawnerModel = FactionSpawnerModel.of(connection, identityCache);
+        FactionSpecialModel specialModel = FactionSpecialModel.of(connection, identityCache);
         FactionWorthModel worthModel = FactionWorthModel.of(connection, identityCache);
 
         materialModel.addBatchDelete(deletedFactions);
         spawnerModel.addBatchDelete(deletedFactions);
+        specialModel.addBatchDelete(deletedFactions);
         worthModel.addBatchDelete(deletedFactions);
 
         for (FactionWorth faction : factions) {
             materialModel.addBatch(faction.getId(), faction.getMaterials());
             spawnerModel.addBatch(faction.getId(), faction.getSpawners());
+            specialModel.addBatch(faction.getId(), faction.getSpecials());
             worthModel.addBatch(faction.getId(), faction.getWorth());
         }
 
         materialModel.executeBatch();
         spawnerModel.executeBatch();
+        specialModel.executeBatch();
         worthModel.executeBatch();
 
         materialModel.close();
         spawnerModel.close();
+        specialModel.close();
         worthModel.close();
     }
 }

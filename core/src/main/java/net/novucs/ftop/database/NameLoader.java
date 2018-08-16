@@ -12,23 +12,27 @@ public class NameLoader {
 
     private static final String SELECT_MATERIAL = "SELECT * FROM `material`";
     private static final String SELECT_SPAWNER = "SELECT * FROM `spawner`";
+    private static final String SELECT_SPECIAL = "SELECT * FROM `special`";
     private static final String SELECT_WORLD = "SELECT * FROM `world`";
     private static final String SELECT_WORTH = "SELECT * FROM `worth`";
 
     private final IdentityCache identityCache;
     private final PreparedStatement selectMaterial;
     private final PreparedStatement selectSpawner;
+    private final PreparedStatement selectSpecial;
     private final PreparedStatement selectWorld;
     private final PreparedStatement selectWorth;
 
     private NameLoader(IdentityCache identityCache,
                        PreparedStatement selectMaterial,
                        PreparedStatement selectSpawner,
+                       PreparedStatement selectSpecial,
                        PreparedStatement selectWorld,
                        PreparedStatement selectWorth) {
         this.identityCache = identityCache;
         this.selectMaterial = selectMaterial;
         this.selectSpawner = selectSpawner;
+        this.selectSpecial = selectSpecial;
         this.selectWorld = selectWorld;
         this.selectWorth = selectWorth;
     }
@@ -36,14 +40,16 @@ public class NameLoader {
     public static NameLoader of(Connection connection, IdentityCache identityCache) throws SQLException {
         PreparedStatement selectMaterial = connection.prepareStatement(SELECT_MATERIAL);
         PreparedStatement selectSpawner = connection.prepareStatement(SELECT_SPAWNER);
+        PreparedStatement selectSpecial = connection.prepareStatement(SELECT_SPECIAL);
         PreparedStatement selectWorld = connection.prepareStatement(SELECT_WORLD);
         PreparedStatement selectWorth = connection.prepareStatement(SELECT_WORTH);
-        return new NameLoader(identityCache, selectMaterial, selectSpawner, selectWorld, selectWorth);
+        return new NameLoader(identityCache, selectMaterial, selectSpawner, selectSpecial, selectWorld, selectWorth);
     }
 
     public void load() throws SQLException {
         loadMaterial();
         loadSpawner();
+        loadSpecial();
         loadWorld();
         loadWorth();
     }
@@ -51,6 +57,7 @@ public class NameLoader {
     public void close() throws SQLException {
         selectMaterial.close();
         selectSpawner.close();
+        selectSpecial.close();
         selectWorld.close();
         selectWorth.close();
     }
@@ -73,6 +80,10 @@ public class NameLoader {
 
     private void loadSpawner() throws SQLException {
         loadName(selectSpawner, identityCache::setSpawnerId);
+    }
+
+    private void loadSpecial() throws SQLException {
+        loadName(selectSpecial, identityCache::setSpecialId);
     }
 
     private void loadWorld() throws SQLException {

@@ -12,23 +12,27 @@ public class FactionLoader {
     private static final String SELECT_FACTION = "SELECT `id` FROM `faction`";
     private static final String SELECT_FACTION_MATERIAL = "SELECT * FROM `faction_material_count`";
     private static final String SELECT_FACTION_SPAWNER = "SELECT * FROM `faction_spawner_count`";
+    private static final String SELECT_FACTION_SPECIAL = "SELECT * FROM `faction_special_count`";
     private static final String SELECT_FACTION_WORTH = "SELECT * FROM `faction_worth`";
 
     private final IdentityCache identityCache;
     private final PreparedStatement selectFaction;
     private final PreparedStatement selectFactionMaterial;
     private final PreparedStatement selectFactionSpawner;
+    private final PreparedStatement selectFactionSpecial;
     private final PreparedStatement selectFactionWorth;
 
     private FactionLoader(IdentityCache identityCache,
                           PreparedStatement selectFaction,
                           PreparedStatement selectFactionMaterial,
                           PreparedStatement selectFactionSpawner,
+                          PreparedStatement selectFactionSpecial,
                           PreparedStatement selectFactionWorth) {
         this.identityCache = identityCache;
         this.selectFaction = selectFaction;
         this.selectFactionMaterial = selectFactionMaterial;
         this.selectFactionSpawner = selectFactionSpawner;
+        this.selectFactionSpecial = selectFactionSpecial;
         this.selectFactionWorth = selectFactionWorth;
     }
 
@@ -36,14 +40,16 @@ public class FactionLoader {
         PreparedStatement selectFaction = connection.prepareStatement(SELECT_FACTION);
         PreparedStatement selectFactionMaterial = connection.prepareStatement(SELECT_FACTION_MATERIAL);
         PreparedStatement selectFactionSpawner = connection.prepareStatement(SELECT_FACTION_SPAWNER);
+        PreparedStatement selectFactionSpecial = connection.prepareStatement(SELECT_FACTION_SPECIAL);
         PreparedStatement selectFactionWorth = connection.prepareStatement(SELECT_FACTION_WORTH);
-        return new FactionLoader(identityCache, selectFaction, selectFactionMaterial, selectFactionSpawner, selectFactionWorth);
+        return new FactionLoader(identityCache, selectFaction, selectFactionMaterial, selectFactionSpecial, selectFactionSpawner, selectFactionWorth);
     }
 
     public void load() throws SQLException {
         loadFaction();
         loadFactionMaterial();
         loadFactionSpawner();
+        loadFactionSpecial();
         loadFactionWorth();
     }
 
@@ -51,6 +57,7 @@ public class FactionLoader {
         selectFaction.close();
         selectFactionMaterial.close();
         selectFactionSpawner.close();
+        selectFactionSpecial.close();
         selectFactionWorth.close();
     }
 
@@ -86,6 +93,19 @@ public class FactionLoader {
             String factionId = resultSet.getString("faction_id");
             int spawnerId = resultSet.getInt("spawner_id");
             identityCache.setFactionSpawnerId(factionId, spawnerId, id);
+        }
+
+        resultSet.close();
+    }
+
+    private void loadFactionSpecial() throws SQLException {
+        ResultSet resultSet = selectFactionSpecial.executeQuery();
+
+        while (resultSet.next()) {
+            int id = resultSet.getInt("id");
+            String factionId = resultSet.getString("faction_id");
+            int specialId = resultSet.getInt("special_id");
+            identityCache.setFactionSpecialId(factionId, specialId, id);
         }
 
         resultSet.close();
