@@ -150,12 +150,15 @@ public class PersistenceTask extends Thread {
         Map<EntityType, Integer> spawners = new EnumMap<>(EntityType.class);
         spawners.putAll(chunkWorth.getSpawners());
 
-        return new ChunkWorth(worth, materials, spawners);
+        Map<String, Integer> specials = new HashMap<>(chunkWorth.getSpecials());
+
+        return new ChunkWorth(worth, materials, spawners, specials);
     }
 
     private boolean chunkWorthEquals(ChunkWorth chunkWorth1, ChunkWorth chunkWorth2) {
         return Objects.equals(chunkWorth1.getWorth(), chunkWorth2.getWorth()) &&
                 Objects.equals(chunkWorth1.getMaterials(), chunkWorth2.getMaterials()) &&
-                Objects.equals(chunkWorth1.getSpawners(), chunkWorth2.getSpawners());
+                Objects.equals(chunkWorth1.getSpawners(), chunkWorth2.getSpawners()) &&
+                Objects.equals(chunkWorth1.getSpecials(), chunkWorth2.getSpecials());
     }
 }

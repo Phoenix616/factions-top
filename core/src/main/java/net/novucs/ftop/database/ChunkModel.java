@@ -46,6 +46,7 @@ public class ChunkModel {
     private void persistNames(Set<Map.Entry<ChunkPos, ChunkWorth>> chunks) throws SQLException {
         MaterialModel materialModel = MaterialModel.of(connection, identityCache);
         SpawnerModel spawnerModel = SpawnerModel.of(connection, identityCache);
+        SpecialModel specialModel = SpecialModel.of(connection, identityCache);
         WorldModel worldModel = WorldModel.of(connection, identityCache);
         WorthModel worthModel = WorthModel.of(connection, identityCache);
 
@@ -55,17 +56,20 @@ public class ChunkModel {
 
             materialModel.addBatch(worth.getMaterials().keySet());
             spawnerModel.addBatch(worth.getSpawners().keySet());
+            specialModel.addBatch(worth.getSpecials().keySet());
             worldModel.addBatch(position.getWorld());
             worthModel.addBatch(worth.getWorth().keySet());
         }
 
         materialModel.executeBatch();
         spawnerModel.executeBatch();
+        specialModel.executeBatch();
         worldModel.executeBatch();
         worthModel.executeBatch();
 
         materialModel.close();
         spawnerModel.close();
+        specialModel.close();
         worldModel.close();
         worthModel.close();
     }
@@ -120,6 +124,7 @@ public class ChunkModel {
     private void persistStatistics(Set<Map.Entry<ChunkPos, ChunkWorth>> chunks) throws SQLException {
         ChunkMaterialModel chunkMaterialModel = ChunkMaterialModel.of(connection, identityCache);
         ChunkSpawnerModel chunkSpawnerModel = ChunkSpawnerModel.of(connection, identityCache);
+        ChunkSpecialModel chunkSpecialModel = ChunkSpecialModel.of(connection, identityCache);
         ChunkWorthModel chunkWorthModel = ChunkWorthModel.of(connection, identityCache);
 
         for (Map.Entry<ChunkPos, ChunkWorth> entry : chunks) {
@@ -131,11 +136,13 @@ public class ChunkModel {
 
             chunkMaterialModel.addBatch(chunkId, worth.getMaterials());
             chunkSpawnerModel.addBatch(chunkId, worth.getSpawners());
+            chunkSpecialModel.addBatch(chunkId, worth.getSpecials());
             chunkWorthModel.addBatch(chunkId, worth.getWorth());
         }
 
         chunkMaterialModel.executeBatch();
         chunkSpawnerModel.executeBatch();
+        chunkSpecialModel.executeBatch();
         chunkWorthModel.executeBatch();
 
         chunkMaterialModel.close();

@@ -22,23 +22,27 @@ public class ChunkLoader {
     private static final String SELECT_CHUNK = "SELECT * FROM `chunk`";
     private static final String SELECT_CHUNK_MATERIAL = "SELECT * FROM `chunk_material_count`";
     private static final String SELECT_CHUNK_SPAWNER = "SELECT * FROM `chunk_spawner_count`";
+    private static final String SELECT_CHUNK_SPECIAL = "SELECT * FROM `chunk_special_count`";
     private static final String SELECT_CHUNK_WORTH = "SELECT * FROM `chunk_worth`";
 
     private final IdentityCache identityCache;
     private final PreparedStatement selectChunk;
     private final PreparedStatement selectChunkMaterial;
     private final PreparedStatement selectChunkSpawner;
+    private final PreparedStatement selectChunkSpecial;
     private final PreparedStatement selectChunkWorth;
 
     private ChunkLoader(IdentityCache identityCache,
                         PreparedStatement selectChunk,
                         PreparedStatement selectChunkMaterial,
                         PreparedStatement selectChunkSpawner,
+                        PreparedStatement selectChunkSpecial,
                         PreparedStatement selectChunkWorth) {
         this.identityCache = identityCache;
         this.selectChunk = selectChunk;
         this.selectChunkMaterial = selectChunkMaterial;
         this.selectChunkSpawner = selectChunkSpawner;
+        this.selectChunkSpecial = selectChunkSpecial;
         this.selectChunkWorth = selectChunkWorth;
     }
 
@@ -46,8 +50,9 @@ public class ChunkLoader {
         PreparedStatement selectChunk = connection.prepareStatement(SELECT_CHUNK);
         PreparedStatement selectChunkMaterial = connection.prepareStatement(SELECT_CHUNK_MATERIAL);
         PreparedStatement selectChunkSpawner = connection.prepareStatement(SELECT_CHUNK_SPAWNER);
+        PreparedStatement selectChunkSpecial = connection.prepareStatement(SELECT_CHUNK_SPECIAL);
         PreparedStatement selectChunkWorth = connection.prepareStatement(SELECT_CHUNK_WORTH);
-        return new ChunkLoader(identityCache, selectChunk, selectChunkMaterial, selectChunkSpawner, selectChunkWorth);
+        return new ChunkLoader(identityCache, selectChunk, selectChunkMaterial, selectChunkSpawner, selectChunkSpecial, selectChunkWorth);
     }
 
     public Map<ChunkPos, ChunkWorth> load() throws SQLException {
@@ -55,6 +60,7 @@ public class ChunkLoader {
         Map<Integer, ChunkPos> chunks = loadChunk();
         Table<Integer, Material, Integer> globalMaterialCount = loadChunkMaterial();
         Table<Integer, EntityType, Integer> globalSpawnerCount = loadChunkSpawner();
+        Table<Integer, String, Integer> globalSpecialCount = loadChunkSpecial();
         Table<Integer, WorthType, Double> globalWorth = loadChunkWorth();
 
         for (Map.Entry<Integer, ChunkPos> entry : chunks.entrySet()) {
@@ -66,11 +72,14 @@ public class ChunkLoader {
             Map<EntityType, Integer> chunkSpawnerCount = new EnumMap<>(EntityType.class);
             chunkSpawnerCount.putAll(globalSpawnerCount.row(chunkId));
 
+            Map<String, Integer> chunkSpecialCount = new HashMap<>();
+            chunkSpecialCount.putAll(globalSpecialCount.row(chunkId));
+
             Map<WorthType, Double> chunkWorth = new EnumMap<>(WorthType.class);
             chunkWorth.putAll(globalWorth.row(chunkId));
 
             ChunkPos chunk = entry.getValue();
-            ChunkWorth worth = new ChunkWorth(chunkWorth, chunkMaterialCount, chunkSpawnerCount);
+            ChunkWorth worth = new ChunkWorth(chunkWorth, chunkMaterialCount, chunkSpawnerCount, chunkSpecialCount);
 
             target.put(chunk, worth);
         }
@@ -136,6 +145,25 @@ public class ChunkLoader {
             identityCache.setChunkSpawnerId(chunkId, spawnerId, id);
             identityCache.getSpawner(spawnerId).ifPresent(spawner ->
                     target.put(chunkId, spawner, count));
+        }
+
+        resultSet.close();
+        return target;
+    }
+
+    private Table<Integer, String, Integer> loadChunkSpecial() throws SQLException {
+        Table<Integer, String, Integer> target = HashBasedTable.create();
+        ResultSet resultSet = selectChunkSpecial.executeQuery();
+
+        while (resultSet.next()) {
+            int id = resultSet.getInt("id");
+            int chunkId = resultSet.getInt("chunk_id");
+            int specialId = resultSet.getInt("special_id");
+            int count = resultSet.getInt("count");
+
+            identityCache.setChunkSpecialId(chunkId, specialId, id);
+            identityCache.getSpecial(specialId).ifPresent(special ->
+                    target.put(chunkId, special, count));
         }
 
         resultSet.close();

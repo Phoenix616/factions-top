@@ -69,6 +69,11 @@ public final class StringUtils {
         }, "worth", message);
 
         message = insertPlaceholders((s) -> {
+            int count = worth.getSpecials().getOrDefault(s, 0);
+            return settings.getCountFormat().format(count);
+        }, "count:special", message);
+
+        message = insertPlaceholders((s) -> {
             int count = worth.getSpawners().getOrDefault(GenericUtils.parseEnum(EntityType.class, s).orElse(null), 0);
             return settings.getCountFormat().format(count);
         }, "count:spawner", message);

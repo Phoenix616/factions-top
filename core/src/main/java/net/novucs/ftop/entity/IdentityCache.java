@@ -18,17 +18,20 @@ public class IdentityCache {
 
     private final BiMap<Key, Integer> chunkMaterial = HashBiMap.create();
     private final BiMap<Key, Integer> chunkSpawner = HashBiMap.create();
+    private final BiMap<Key, Integer> chunkSpecial = HashBiMap.create();
     private final BiMap<Key, Integer> chunkWorth = HashBiMap.create();
     private final BiMap<Key, Integer> chunkPos = HashBiMap.create();
 
     private final BiMap<Key, Integer> material = HashBiMap.create();
     private final BiMap<Key, Integer> spawner = HashBiMap.create();
+    private final BiMap<Key, Integer> special = HashBiMap.create();
     private final BiMap<Key, Integer> world = HashBiMap.create();
     private final BiMap<Key, Integer> worth = HashBiMap.create();
 
     private final Set<String> faction = new HashSet<>();
     private final Table<String, Integer, Integer> factionMaterial = HashBasedTable.create();
     private final Table<String, Integer, Integer> factionSpawner = HashBasedTable.create();
+    private final Table<String, Integer, Integer> factionSpecial = HashBasedTable.create();
     private final Table<String, Integer, Integer> factionWorth = HashBasedTable.create();
 
     private final BiMap<Key, Integer> block = HashBiMap.create();
@@ -46,6 +49,10 @@ public class IdentityCache {
         return chunkSpawner.containsKey(new Key<>(chunkId, spawnerId));
     }
 
+    public boolean hasChunkSpecial(int chunkId, int specialId) {
+        return chunkSpecial.containsKey(new Key<>(chunkId, specialId));
+    }
+
     public boolean hasChunkWorth(int chunkId, int worthId) {
         return chunkWorth.containsKey(new Key<>(chunkId, worthId));
     }
@@ -60,6 +67,9 @@ public class IdentityCache {
 
     public boolean hasSpawner(String name) {
         return spawner.containsKey(new Key<>(name));
+    }
+    public boolean hasSpecial(String name) {
+        return special.containsKey(new Key<>(name));
     }
 
     public boolean hasWorld(String name) {
@@ -82,6 +92,10 @@ public class IdentityCache {
         return factionSpawner.contains(factionId, spawnerId);
     }
 
+    public boolean hasFactionSpecial(String factionId, int specialId) {
+        return factionSpecial.contains(factionId, specialId);
+    }
+
     public boolean hasFactionWorth(String factionId, int worthId) {
         return factionWorth.contains(factionId, worthId);
     }
@@ -102,6 +116,10 @@ public class IdentityCache {
         return chunkSpawner.get(new Key<>(chunkId, spawnerId));
     }
 
+    public Integer getChunkSpecialId(int chunkId, int special) {
+        return chunkSpecial.get(new Key<>(chunkId, special));
+    }
+
     public Integer getChunkWorthId(int chunkId, int worthId) {
         return chunkWorth.get(new Key<>(chunkId, worthId));
     }
@@ -118,6 +136,10 @@ public class IdentityCache {
         return spawner.get(new Key<>(name));
     }
 
+    public Integer getSpecialId(String name) {
+        return special.get(new Key<>(name));
+    }
+
     public Integer getWorldId(String name) {
         return world.get(new Key<>(name));
     }
@@ -132,6 +154,10 @@ public class IdentityCache {
 
     public Integer getFactionSpawnerId(String factionId, int spawnerId) {
         return factionSpawner.get(factionId, spawnerId);
+    }
+
+    public Integer getFactionSpecialId(String factionId, int specialId) {
+        return factionSpecial.get(factionId, specialId);
     }
 
     public Integer getFactionWorthId(String factionId, int worthId) {
@@ -161,6 +187,11 @@ public class IdentityCache {
         return key == null ? Optional.empty() : GenericUtils.parseEnum(EntityType.class, (String) key.getObjects()[0]);
     }
 
+    public Optional<String> getSpecial(int specialId) {
+        Key key = special.inverse().get(specialId);
+        return key == null ? Optional.empty() : Optional.of((String) key.getObjects()[0]);
+    }
+
     public Optional<WorthType> getWorthType(int worthId) {
         Key key = worth.inverse().get(worthId);
         return key == null ? Optional.empty() : GenericUtils.parseEnum(WorthType.class, (String) key.getObjects()[0]);
@@ -187,6 +218,10 @@ public class IdentityCache {
         chunkSpawner.put(new Key<>(chunkId, spawnerId), value);
     }
 
+    public void setChunkSpecialId(int chunkId, int specialId, Integer value) {
+        chunkSpecial.put(new Key<>(chunkId, specialId), value);
+    }
+
     public void setChunkWorthId(int chunkId, int worthId, Integer value) {
         chunkWorth.put(new Key<>(chunkId, worthId), value);
     }
@@ -201,6 +236,10 @@ public class IdentityCache {
 
     public void setSpawnerId(String name, Integer value) {
         spawner.put(new Key<>(name), value);
+    }
+
+    public void setSpecialId(String name, Integer value) {
+        special.put(new Key<>(name), value);
     }
 
     public void setWorldId(String name, Integer value) {
@@ -219,6 +258,7 @@ public class IdentityCache {
         faction.remove(factionId);
         factionMaterial.row(factionId).clear();
         factionSpawner.row(factionId).clear();
+        factionSpecial.row(factionId).clear();
         factionWorth.row(factionId).clear();
     }
 
@@ -228,6 +268,10 @@ public class IdentityCache {
 
     public void setFactionSpawnerId(String factionId, int spawnerId, Integer value) {
         factionSpawner.put(factionId, spawnerId, value);
+    }
+
+    public void setFactionSpecialId(String factionId, int specialId, Integer value) {
+        factionSpecial.put(factionId, specialId, value);
     }
 
     public void setFactionWorthId(String factionId, int worthId, Integer value) {

@@ -1,5 +1,7 @@
 package net.novucs.ftop;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -11,24 +13,28 @@ import net.novucs.ftop.gui.element.GuiElementType;
 import net.novucs.ftop.gui.element.GuiWorthList;
 import net.novucs.ftop.hook.VaultEconomyHook;
 import net.novucs.ftop.util.GenericUtils;
+import net.novucs.ftop.util.ItemMatcher;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
+import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static net.novucs.ftop.util.StringUtils.format;
 
 public class Settings {
 
-    private static final int LATEST_VERSION = 7;
+    private static final int LATEST_VERSION = 8;
 
     private static final ImmutableList<String> FACTION_WORTH_HOVER = ImmutableList.of(
             "&e&l-- General --",
@@ -43,6 +49,11 @@ public class Settings {
             "&dSlime: &b{count:spawner:slime}",
             "&dSkeleton: &b{count:spawner:skeleton}",
             "&dZombie: &b{count:spawner:zombie}",
+            "",
+            "&e&l-- Special Items --",
+            "&dArmor: &b{count:special:armor}",
+            "&dWeapons: &b{count:special:weapons}",
+            "&dUtility: &b{count:special:utility}",
             "",
             "&e&l-- Materials --",
             "&dEmerald Block: &b{count:material:emerald_block}",
@@ -67,12 +78,18 @@ public class Settings {
             "&dSkeleton: &b{count:spawner:skeleton}",
             "&dZombie: &b{count:spawner:zombie}",
             "",
+            "&e&l-- Special Items --",
+            "&dArmor: &b{count:special:armor}",
+            "&dWeapons: &b{count:special:weapons}",
+            "&dUtility: &b{count:special:utility}",
+            "",
             "&e&l-- Materials --",
             "&dEmerald Block: &b{count:material:emerald_block}",
             "&dDiamond Block: &b{count:material:diamond_block}",
             "&dGold Block: &b{count:material:gold_block}",
             "&dIron Block: &b{count:material:iron_block}",
             "&dCoal Block: &b{count:material:coal_block}"
+
     );
 
     private static final ImmutableList<ImmutableMap<?, ?>> GUI_LAYOUT = ImmutableList.of(
@@ -174,6 +191,9 @@ public class Settings {
     private Map<RecalculateReason, Boolean> bypassRecalculateDelay;
     private Map<EntityType, Double> spawnerPrices;
     private Map<Material, Double> blockPrices;
+    private Map<String, ItemMatcher> specialPrices;
+
+    private Cache<Integer, String> specialPriceCache = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build();
 
     public Settings(FactionsTopPlugin plugin) {
         this.plugin = plugin;
@@ -367,6 +387,22 @@ public class Settings {
         return blockPrices.getOrDefault(material, 0d);
     }
 
+    public ItemMatcher getMatchingSpecial(ItemStack itemStack) {
+        try {
+            String matcherName = specialPriceCache.get(itemStack.hashCode(), () -> {
+                for (Map.Entry<String, ItemMatcher> entry : specialPrices.entrySet()) {
+                    if (entry.getValue().matches(itemStack)) {
+                        return entry.getKey();
+                    }
+                }
+                return "";
+            });
+            return matcherName.isEmpty() ? null : specialPrices.get(matcherName);
+        } catch (ExecutionException e) {
+            return null;
+        }
+    }
+
     private void set(String path, Object val) {
         config.set(path, val);
     }
@@ -524,7 +560,7 @@ public class Settings {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public void load() throws IOException, InvalidConfigurationException {
         // Create then load the configuration and file.
-        configFile = new File(plugin.getDataFolder() + File.separator + "config.yml");
+        configFile = new File(plugin.getDataFolder(), "config.yml");
         configFile.getParentFile().mkdirs();
         configFile.createNewFile();
 
@@ -629,6 +665,33 @@ public class Settings {
         );
         addDefaults("settings.block-prices", parseDefPrices(Material.class, prices));
         blockPrices = parsePriceMap(Material.class, "settings.block-prices", 0);
+
+        config.addDefault("settings.special-prices.item-group", ImmutableMap.of(
+                "worth", 20,
+                "parameter-example", ImmutableMap.builder()
+                        .putAll(ImmutableMap.of(
+                                "inverted", false,
+                                "material", new ArrayList<>(),
+                                "name", new ArrayList<>(),
+                                "lore", new ArrayList<>(),
+                                "durability", ""
+                        )).putAll(ImmutableMap.of(
+                                "unbreakable", true,
+                                "enchantments", new ArrayList<>(),
+                                "serialized", ""
+                        )).build(),
+                "specific-example", ImmutableMap.of(
+                        "material", Collections.singletonList("diamond_sword"),
+                        "name", Collections.singletonList("Phoenix616's Sword"),
+                        "unbreakable", true,
+                        "enchantments", Collections.singletonList("damage_all:>9000")
+                )
+        ));
+
+        specialPrices = new LinkedHashMap<>();
+        for (String matcherName : getOrCreateSection("settings.special-prices").getKeys(false)) {
+            specialPrices.put(matcherName, new ItemMatcher(plugin, matcherName, getOrCreateSection("settings.special-prices." + matcherName)));
+        }
 
         // Update the configuration file if it is outdated.
         if (version < LATEST_VERSION) {

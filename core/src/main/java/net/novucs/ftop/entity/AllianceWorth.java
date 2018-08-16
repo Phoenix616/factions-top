@@ -5,7 +5,6 @@ import net.novucs.ftop.util.SplaySet;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiFunction;
 
 public class AllianceWorth extends Worth {
     
@@ -29,13 +28,10 @@ public class AllianceWorth extends Worth {
             return a;
         });
         for (FactionWorth factionWorth : factions.values()) {
-            addMaterials(factionWorth.getMaterials());
-            addSpawners(factionWorth.getSpawners());
-            addWorth(factionWorth.getWorth());
-            orderedFactions.add(factionWorth);
+            addFactionWorth(factionWorth);
         }
     }
-    
+
     public void addFaction(FactionWorth factionWorth) {
         FactionWorth oldFaction = factions.get(factionWorth.getId().toLowerCase());
         if (oldFaction != null) {
@@ -43,10 +39,7 @@ public class AllianceWorth extends Worth {
         }
         orderedFactions.remove(factionWorth);
         factions.put(factionWorth.getId().toLowerCase(), factionWorth);
-        addMaterials(factionWorth.getMaterials());
-        addSpawners(factionWorth.getSpawners());
-        addWorth(factionWorth.getWorth());
-        orderedFactions.add(factionWorth);
+        addFactionWorth(factionWorth);
     }
     
     public void removeFaction(FactionWorth factionWorth) {
@@ -55,10 +48,19 @@ public class AllianceWorth extends Worth {
             orderedFactions.remove(oldFaction);
             removeMaterials(oldFaction.getMaterials());
             removeSpawners(oldFaction.getSpawners());
+            removeSpecials(oldFaction.getSpecials());
             removeWorth(oldFaction.getWorth());
         }
         factions.remove(factionWorth.getId());
         orderedFactions.remove(factionWorth);
+    }
+
+    private void addFactionWorth(FactionWorth factionWorth) {
+        addMaterials(factionWorth.getMaterials());
+        addSpawners(factionWorth.getSpawners());
+        addSpecials(factionWorth.getSpecials());
+        addWorth(factionWorth.getWorth());
+        orderedFactions.add(factionWorth);
     }
     
     public Map<String, FactionWorth> getFactions() {
@@ -75,8 +77,9 @@ public class AllianceWorth extends Worth {
                 "allianceId='" + getId() + '\'' +
                 ", factions=" + getFactions().keySet() +
                 ", worth=" + getWorth() +
-                ", materials=" + getMaterials() +
-                ", spawners=" + getSpawners() +
+                ", materials=" + materials +
+                ", spawners=" + spawners +
+                ", specials=" + specials +
                 ", name='" + getName() + '\'' +
                 ", totalWorth=" + getTotalWorth() +
                 '}';

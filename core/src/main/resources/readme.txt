@@ -33,6 +33,20 @@ Configuration walkthrough:
 - bypass-recalculate-delay: Toggles which reason bypasses the delay.
 - spawner-prices: Value for specific spawners.
 - block-prices: Value for specific blocks.
+- special-prices: Value for special items.
+- - item-group: A group of similar items
+- - - worth: The worth of this group
+- - - item-matcher: The definition of a matcher (all values can be left out and count as a match-all that way
+- - - - inverted: Whether or not this match is inverted (match only items that don't match the values)
+- - - - material: List of materials to match
+- - - - name: List of strings in name to match (case-insensitive), use the prefix r= to use regex
+- - - - lore: List of strings in lore to match (case-insensitive), use the prefix r= to use regex
+- - - - durability: Item durability value, can use comparators, <x, >x, =x, !=x or just equal a single number. An empty string matches all durabilities. Also supports chaining of comparators with a comma. E.g. >5,<20 for between 5 and 20
+- - - - unbreakable: Match items with the unbreakable tag
+- - - - enchantments: List of enchantments to match, can match both all or only certain levels. Can take the same comparators as the durability for the level.
+- - - - serialized: Serialize the item to YAML and filter it with regex. This is only for advanced users and is less efficient, leave empty to disable.
+- - - another-item-matcher: You can define as many matchers as you want
+- - another-item-group: Same with the groups, define multiple for different worths
 
 Layout types:
 - button_back/button_next: When clicked, moves to relevant page.
@@ -88,6 +102,7 @@ Body only:
 - {count:total:spawner} - Total spawner count.
 - {worth:<worth type>} - Value of a specific worth type.
 - {count:spawner:<spawner>} - Count of a specific spawner type.
+- {count:special:<special-name>} - Count of a specific special item group.
 - {count:material:<material>} - Count of a specific material.
 
 MVdW Placeholders/Clip's PlaceholderAPI:

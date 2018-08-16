@@ -161,7 +161,7 @@ public final class FactionsTopApi {
          * @return the number of this type of spawner the faction owns.
          */
         public int getSpawnerCount(EntityType type) {
-            return worth.getSpawners().get(type);
+            return worth.getSpawners().getOrDefault(type, 0);
         }
 
         /**
@@ -171,7 +171,17 @@ public final class FactionsTopApi {
          * @return the number of this type of material the faction owns.
          */
         public int getMaterialCount(Material material) {
-            return worth.getMaterials().get(material);
+            return worth.getMaterials().getOrDefault(material, 0);
+        }
+
+        /**
+         * Gets the item count for a particular special group.
+         *
+         * @param specialName the special group name type.
+         * @return the number of this special group of items the faction owns.
+         */
+        public int getSpecialCount(String specialName) {
+            return worth.getSpecials().getOrDefault(specialName, 0);
         }
     }
 }

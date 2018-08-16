@@ -7,17 +7,21 @@ import net.novucs.ftop.PluginService;
 import net.novucs.ftop.RecalculateReason;
 import net.novucs.ftop.WorthType;
 import net.novucs.ftop.entity.AllianceWorth;
+import net.novucs.ftop.entity.ChestWorth;
 import net.novucs.ftop.entity.ChunkPos;
 import net.novucs.ftop.entity.ChunkWorth;
 import net.novucs.ftop.entity.FactionWorth;
 import net.novucs.ftop.entity.Worth;
+import net.novucs.ftop.util.GenericUtils;
+import net.novucs.ftop.util.ItemMatcher;
 import net.novucs.ftop.util.SplaySet;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
-import org.bukkit.block.Chest;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.entity.EntityType;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
@@ -288,16 +292,28 @@ public final class WorthManager implements PluginService {
         factionWorth.addSpawners(spawners);
     }
 
+    private void setSpecials(ChunkPos pos, Map<String, Integer> specials) {
+        // Do nothing if faction worth is null.
+        FactionWorth factionWorth = getOrCreateFactionWorth(pos);
+        if (factionWorth == null) return;
+
+        // Update all stats with the new chunk data.
+        ChunkWorth chunkWorth = getChunkWorth(pos);
+        factionWorth.removeSpecials(chunkWorth.getSpecials());
+        chunkWorth.setSpecials(specials);
+        factionWorth.addSpecials(specials);
+    }
+
     /**
      * Adds worth to a chunk.
-     *
-     * @param chunk     the chunk.
+     *  @param chunk     the chunk.
      * @param reason    the reason.
      * @param worthType the worth type.
      * @param worth     the worth value.
+     * @param specials
      */
     public void add(Chunk chunk, RecalculateReason reason, WorthType worthType, double worth,
-                    Map<Material, Integer> materials, Map<EntityType, Integer> spawners) {
+                    Map<Material, Integer> materials, Map<EntityType, Integer> spawners, Map<String, Integer> specials) {
         // Do nothing if worth type is disabled or worth is nothing.
         if (!plugin.getSettings().isEnabled(worthType) || worth == 0) {
             return;
@@ -315,10 +331,12 @@ public final class WorthManager implements PluginService {
         chunkWorth.addWorth(worthType, worth);
         chunkWorth.addMaterials(materials);
         chunkWorth.addSpawners(spawners);
+        chunkWorth.addSpecials(specials);
 
         factionWorth.addWorth(worthType, worth);
         factionWorth.addMaterials(materials);
         factionWorth.addSpawners(spawners);
+        factionWorth.addSpecials(specials);
 
         orderedFactions.add(factionWorth);
 
@@ -404,16 +422,18 @@ public final class WorthManager implements PluginService {
         // there is no better method of doing this. Same with chests.
         Map<EntityType, Integer> spawners = new EnumMap<>(EntityType.class);
         Map<Material, Integer> materials = new EnumMap<>(Material.class);
+        Map<String, Integer> specials = new HashMap<>();
 
         if (plugin.getSettings().isEnabled(WorthType.SPAWNER)) {
             set(pos, WorthType.SPAWNER, getSpawnerWorth(chunk, spawners));
         }
 
         if (plugin.getSettings().isEnabled(WorthType.CHEST)) {
-            set(pos, WorthType.CHEST, getChestWorth(chunk, materials, spawners));
+            set(pos, WorthType.CHEST, getChestWorth(chunk, materials, spawners, specials));
         }
 
         setSpawners(pos, spawners);
+        setSpecials(pos, specials);
         materialsQueue.row(pos).putAll(materials);
 
         plugin.getChunkWorthTask().queue(chunk.getChunkSnapshot());
@@ -467,54 +487,66 @@ public final class WorthManager implements PluginService {
      * @param chunk     the chunk.
      * @param materials the material totals to add to.
      * @param spawners  the spawner totals to add to.
+     * @param specials  the special item totals to add to.
      * @return the chunk worth in materials.
      */
-    private double getChestWorth(Chunk chunk, Map<Material, Integer> materials, Map<EntityType, Integer> spawners) {
-        int count;
+    private double getChestWorth(Chunk chunk, Map<Material, Integer> materials, Map<EntityType, Integer> spawners, Map<String, Integer> specials) {
         double worth = 0;
-        double materialPrice;
-        EntityType spawnerType;
 
         for (BlockState blockState : chunk.getTileEntities()) {
-            if (!(blockState instanceof Chest)) {
+            if (!(blockState instanceof InventoryHolder)) {
                 continue;
             }
 
-            Chest chest = (Chest) blockState;
-
-            for (ItemStack item : chest.getBlockInventory()) {
-                if (item == null) continue;
-
-                int stackSize = item.getAmount();
-
-                switch (item.getType()) {
-                    case MOB_SPAWNER:
-                        stackSize *= plugin.getSpawnerStackerHook().getStackSize(item);
-                        spawnerType = plugin.getSpawnerStackerHook().getSpawnedType(item);
-                        double price = plugin.getSettings().getSpawnerPrice(spawnerType);
-                        materialPrice = price * stackSize;
-                        break;
-                    default:
-                        materialPrice = plugin.getSettings().getBlockPrice(item.getType()) * stackSize;
-                        spawnerType = null;
-                        break;
-                }
-
-                worth += materialPrice;
-
-                if (materialPrice != 0) {
-                    if (spawnerType == null) {
-                        count = materials.getOrDefault(item.getType(), 0);
-                        materials.put(item.getType(), count + stackSize);
-                    } else {
-                        count = spawners.getOrDefault(spawnerType, 0);
-                        spawners.put(spawnerType, count + stackSize);
-                    }
-                }
-            }
+            ChestWorth chestWorth = getWorth(((InventoryHolder) blockState).getInventory());
+            worth += chestWorth.getTotalWorth();
+            GenericUtils.addCountMap(materials, chestWorth.getMaterials());
+            GenericUtils.addCountMap(spawners, chestWorth.getSpawners());
+            GenericUtils.addCountMap(specials, chestWorth.getSpecials());
         }
 
         return worth;
+    }
+
+    public ChestWorth getWorth(Inventory inventory) {
+        return getWorth(inventory, false);
+    }
+
+    public ChestWorth getWorth(Inventory inventory, boolean negate) {
+        int mult = negate ? -1 : 1;
+        double worth = 0;
+        Map<Material, Integer> materials = new HashMap<>();
+        Map<EntityType, Integer> spawners = new HashMap<>();
+        Map<String, Integer> specials = new HashMap<>();
+
+        for (ItemStack item : inventory.getContents()) {
+            if (item == null || item.getType() == Material.AIR) continue;
+
+            ItemMatcher specialMatcher = plugin.getSettings().getMatchingSpecial(item);
+            if (specialMatcher != null) {
+                worth += specialMatcher.getWorth() * item.getAmount() * mult;
+
+                int count = specials.getOrDefault(specialMatcher.getName(), 0);
+                specials.put(specialMatcher.getName(), count + item.getAmount() * mult);
+                continue;
+            }
+
+            if (item.getType() == Material.MOB_SPAWNER) {
+                int stackSize = plugin.getSpawnerStackerHook().getStackSize(item);
+                EntityType spawnerType = plugin.getSpawnerStackerHook().getSpawnedType(item);
+                worth += plugin.getSettings().getSpawnerPrice(spawnerType) * item.getAmount() * stackSize * mult;
+
+                int count = spawners.getOrDefault(spawnerType, 0);
+                spawners.put(spawnerType, count + (item.getAmount() * stackSize * mult));
+                continue;
+            }
+
+            worth += plugin.getSettings().getBlockPrice(item.getType()) * item.getAmount() * mult;
+            int count = materials.getOrDefault(item.getType(), 0);
+            materials.put(item.getType(), count + item.getAmount() * mult);
+        }
+
+        return new ChestWorth(worth, materials, spawners, specials);
     }
 
     /**
@@ -545,9 +577,11 @@ public final class WorthManager implements PluginService {
             if (unclaimed) {
                 factionWorth.removeMaterials(chunkWorth.getMaterials());
                 factionWorth.removeSpawners(chunkWorth.getSpawners());
+                factionWorth.removeSpecials(chunkWorth.getSpecials());
             } else {
                 factionWorth.addMaterials(chunkWorth.getMaterials());
                 factionWorth.addSpawners(chunkWorth.getSpawners());
+                factionWorth.addSpecials(chunkWorth.getSpecials());
             }
 
             // Schedule chunk for recalculation.
